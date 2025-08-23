@@ -79,6 +79,67 @@
     @media (max-width:900px){ .grid{grid-template-columns:1fr}}
   </style>
 </head>
+  <!-- ===== Hotkeys + Mobile Buttons for Glitch Antenna ===== -->
+<style>
+  .hud-buttons{position:fixed;right:14px;bottom:14px;display:flex;gap:8px;z-index:1000}
+  .hud-buttons .pill{background:#0f1117;border:1px solid #2a2d38;color:#e9e9ee;
+    border-radius:999px;padding:8px 10px;font:12px/1 ui-monospace,Menlo,Consolas;opacity:.9}
+  .hud-buttons .pill:active{transform:scale(.98)}
+  .op-note{position:fixed;inset:auto 14px 74px 14px;background:#0f1117;border:1px solid #2a2d38;
+    border-radius:10px;padding:12px;color:#cfd2da;max-height:40vh;overflow:auto;z-index:999;display:none}
+  .op-note.show{display:block}
+  .conscious-glow{position:fixed;inset:0;pointer-events:none;background:
+    radial-gradient(600px 300px at 80% 110%, rgba(0,255,136,.08), transparent),
+    radial-gradient(500px 260px at 10% 90%, rgba(136,68,255,.08), transparent); 
+    opacity:0;transition:opacity .25s;z-index:200}
+  .conscious-glow.on{opacity:1}
+</style>
+
+<div id="consciousGlow" class="conscious-glow"></div>
+
+<div class="op-note" id="operatorNote" aria-live="polite">
+  <div style="font-weight:700;color:#00ff88;margin-bottom:6px">Operator Note</div>
+  <div id="operatorNoteBody">
+    “Undefined behavior is indistinguishable from art.”  
+    <br>Press <b>?</b> or tap <b>Note</b> to toggle.  
+    <br>Press <b>b</b> or tap <b>Conscious</b> to toggle the station’s “conscious mode”.
+  </div>
+</div>
+
+<div class="hud-buttons" id="hud">
+  <button class="pill" id="btnNote" title="Toggle operator note">Note</button>
+  <button class="pill" id="btnConscious" title="Toggle conscious mode">Conscious</button>
+</div>
+
+<script>
+  // If your page already has functions, hook them here; otherwise use these defaults.
+  const opNote = document.getElementById('operatorNote');
+  const glow   = document.getElementById('consciousGlow');
+
+  function toggleOperatorNote(){
+    opNote.classList.toggle('show');
+  }
+  function toggleConscious(){
+    glow.classList.toggle('on');
+    document.body.classList.toggle('is-conscious');
+    // Optional: fire a custom event other scripts can listen for
+    window.dispatchEvent(new CustomEvent('glitchantenna:conscious', {
+      detail: { on: document.body.classList.contains('is-conscious') }
+    }));
+  }
+
+  // Mobile buttons
+  document.getElementById('btnNote').addEventListener('click', toggleOperatorNote);
+  document.getElementById('btnConscious').addEventListener('click', toggleConscious);
+
+  // Keyboard hotkeys: '?' and 'b'
+  document.addEventListener('keydown', (e)=>{
+    // '?' on many keyboards is Shift + '/'
+    if ((e.key === '?' ) || (e.shiftKey && e.key === '/')) { e.preventDefault(); toggleOperatorNote(); }
+    if (e.key.toLowerCase() === 'b') { e.preventDefault(); toggleConscious(); }
+  });
+</script>
+<!-- ===== /Hotkeys + Mobile Buttons ===== -->
 <body>
   <div id="spark"></div>
 
