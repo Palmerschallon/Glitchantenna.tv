@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Glitch Antenna — tuning chaos to signal</title>
+  <meta name="description" content="A broadcast node from the void. Tuning giggle.loop, reruns, and artifacts.">
+  <!-- OG / X -->
+  <meta property="og:title" content="Glitch Antenna"/>
+  <meta property="og:description" content="A broadcast node from the void. Tuning giggle.loop, reruns, and artifacts."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:image" content=""/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <style>
+    :root{
+      --bg:#0a0b0f; --panel:#0e0f15; --ink:#e8e9ef; --muted:#98a0ad;
+      --edge:#232838; --accent:#00ff88; --glow:#60ffa9; --warn:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;background:radial-gradient(1200px 600px at 70% -10%, #161a28 0%, var(--bg) 60%);
+      color:var(--ink); font:15.5px/1.55 ui-sans-serif,system-ui,Inter,Segoe UI,Arial;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:36px;height:36px;border-radius:8px;border:1px solid var(--edge);display:grid;place-items:center;background:#0f111a}
+    .logo i{width:22px;height:22px;border:2px solid var(--accent);border-radius:50%;position:relative;box-shadow:0 0 12px #00ff8833}
+    .logo i:after{content:"";position:absolute;left:50%;top:-8px;width:2px;height:10px;background:var(--accent);transform:translateX(-50%);}
+    .tag{color:var(--muted);font-size:13px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--edge);border-radius:10px;background:#121421;color:var(--ink);cursor:pointer}
+    .btn:hover{background:#171a28}
+    .btn.ghost{background:transparent}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;margin:22px 0}
+    .card{background:#0e1118; border:1px solid var(--edge); border-radius:14px; padding:16px}
+    h1{font-size:38px;line-height:1.12;margin:8px 0}
+    h2{font-size:13px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:0 0 8px}
+    .k{color:var(--muted);font-size:13px}
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+    .footer{margin:28px 0 8px;color:var(--muted);font-size:12.5px}
+    /* TV */
+    .tv{position:relative;background:#090b10;border-radius:12px;border:1px solid #1b2030;overflow:hidden}
+    .bezel{border:1px solid #191d2a;border-radius:10px;padding:8px;background:linear-gradient(#0b0d12,#090a0f)}
+    .screen{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden;border-radius:8px}
+    .scanlines:before{
+      content:""; position:absolute; inset:0; background:
+      repeating-linear-gradient(transparent 0 2px, #00000040 2px 3px);
+      mix-blend-mode:overlay; pointer-events:none;
+    }
+    .glow{box-shadow:0 0 40px #00ff8820 inset, 0 0 80px #00ff1218;}
+    canvas#snow{position:absolute;inset:0;display:block}
+    .videoWrap{position:absolute;inset:0;display:none}
+    .ticker{margin-top:10px;border-top:1px solid #192033;padding-top:8px;color:#cfe5da}
+    /* Glitch title */
+    .glitch{position:relative;display:inline-block}
+    .glitch:before,.glitch:after{
+      content:attr(data-text); position:absolute; left:0; top:0; clip-path:inset(0 0 0 0);
+    }
+    .glitch:before{transform:translate(1px,0); color:#00eaff66; mix-blend-mode:screen}
+    .glitch:after{transform:translate(-1px,0); color:#ff3fd266; mix-blend-mode:screen}
+    /* Responsive */
+    @media (max-width:900px){ .hero{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- NAV -->
+    <div class="nav">
+      <div class="brand">
+        <div class="logo"><i></i></div>
+        <div>
+          <strong>Glitch Antenna</strong>
+          <div class="tag">“I am a simple antenna.” — broadcasting from the void</div>
+        </div>
+      </div>
+      <div class="cta">
+        <button id="tune" class="btn">🔧 Tune</button>
+        <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">$GLOOP site</a>
+        <a class="btn ghost" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <!-- LEFT: TV -->
+      <div class="card tv">
+        <div class="bezel">
+          <div class="screen scanlines glow">
+            <canvas id="snow" aria-hidden="true"></canvas>
+            <div class="videoWrap" id="videoWrap" aria-label="broadcast window">
+              <!-- Replace src with your hosted clip if you want autoplay (muted/autoplay/loop) -->
+              <video id="clip" muted loop playsinline style="width:100%;height:100%;object-fit:cover;background:#000"></video>
+            </div>
+          </div>
+        </div>
+        <div class="ticker mono">
+          <span class="k">broadcast.log:</span>
+          <span id="log">[idle] static whispering jokes from another channel…</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: COPY -->
+      <div class="card">
+        <h2>now tuning</h2>
+        <h1 class="glitch" data-text="signal ←→ noise">signal ←→ noise</h1>
+        <p>Welcome to <em>glitchantenna.tv</em> — a tiny station where undefined behavior
+          looks suspiciously like art. Sometimes we broadcast reruns from the
+          giggle.loop. Sometimes we mint what leaks.</p>
+
+        <div class="mono k" style="margin-top:10px">
+<pre style="margin:0;white-space:pre-wrap">antenna.boot()
+  → lock(channel="void.tv")
+  → catch(punchline)
+  → rebroadcast as artifact</pre>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn" href="#artifacts">View artifacts</a>
+          <button class="btn ghost" id="secret">Reveal operator note (?)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTIFACTS -->
+    <section id="artifacts" class="card">
+      <h2>rerun artifacts</h2>
+      <p class="k">A small shelf of canonical bits. More soon™.</p>
+      <ul class="k" style="margin:8px 0 0 18px;line-height:1.6">
+        <li><a href="https://magiceden.us/mint-terminal/ethereum/0xf3c978e11a1e59e12e9e412b1857ff3135f5188b" target="_blank" rel="noopener">Paradox Heckler, Episode Card</a></li>
+        <li><a href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">$GLOOP — the giggle loop that escaped</a></li>
+      </ul>
+    </section>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="k">Tip:</div>
+      <p class="k">Press <strong>?</strong> to toggle the operator note. “Undefined behavior is indistinguishable from art.”</p>
+      <p class="k">© <span id="year"></span> Glitch Antenna. Broadcast responsibly; the void has long memory.</p>
+    </div>
+  </div>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Simple CRT snow
+    const cvs = document.getElementById('snow');
+    const ctx = cvs.getContext('2d', { willReadFrequently:true });
+    function resize(){ const r = window.devicePixelRatio||1;
+      const {width:w, height:h} = cvs.getBoundingClientRect();
+      cvs.width = Math.floor(w*r); cvs.height = Math.floor(h*r); ctx.scale(r,r);
+    }
+    new ResizeObserver(resize).observe(cvs); resize();
+    function noise(){
+      const {width:w, height:h} = cvs.getBoundingClientRect();
+      const img = ctx.createImageData(w, h);
+      for(let i=0;i<img.data.length;i+=4){
+        const v = Math.random()*255;
+        img.data[i]=img.data[i+1]=img.data[i+2]=v;
+        img.data[i+3]=255;
+      }
+      ctx.putImageData(img,0,0);
+      // subtle roll
+      ctx.globalCompositeOperation='screen';
+      ctx.fillStyle='rgba(0,255,136,0.03)';
+      ctx.fillRect(0,0,w,Math.random()*h*0.05+2);
+      ctx.globalCompositeOperation='source-over';
+      requestAnimationFrame(noise);
+    }
+    noise();
+
+    // Tune button toggles video vs snow
+    const tuneBtn = document.getElementById('tune');
+    const videoWrap = document.getElementById('videoWrap');
+    const clip = document.getElementById('clip');
+    const log = document.getElementById('log');
+
+    // (Optional) provide a clip URL later
+    const CLIP_URL = ""; // e.g. "/clips/episode-42.mp4"
+    if (CLIP_URL) { clip.src = CLIP_URL; }
+
+    let tuned = false;
+    function tune(){
+      tuned = !tuned;
+      if (tuned && CLIP_URL){
+        videoWrap.style.display='block';
+        clip.play().catch(()=>{});
+        log.textContent = "[tuned] rerun acquired — signal holding at 42Hz.";
+        tuneBtn.textContent = "📺 De-tune";
+      } else {
+        videoWrap.style.display='none';
+        clip.pause();
+        log.textContent = "[idle] static whispering jokes from another channel…";
+        tuneBtn.textContent = "🔧 Tune";
+      }
+    }
+    tuneBtn.addEventListener('click', tune);
+
+    // Secret operator note
+    const secretBtn = document.getElementById('secret');
+    let show=false;
+    function toggleNote(){
+      show = !show;
+      alert( show
+        ? "OP-NOTE: If reality throws exceptions, catch them as artifacts.\n— antenna"
+        : "OP-NOTE hidden." );
+    }
+    secretBtn.addEventListener('click', toggleNote);
+    window.addEventListener('keydown', e=>{ if(e.key==='?') toggleNote(); });
+  </script>
+</body>
+</html>
