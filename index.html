@@ -3,336 +3,363 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Glitch Antenna — signal ↔ noise</title>
-  <meta name="description" content="A tiny station where undefined behavior looks suspiciously like art. Sometimes we broadcast reruns from the giggle.loop. Sometimes we mint what leaks." />
-
-  <!-- Open Graph / X -->
-  <meta property="og:title" content="Glitch Antenna — signal ↔ noise" />
-  <meta property="og:description" content="Broadcasting from the void. Rerun artifacts, $GLOOP lore, and occasional leaks." />
-  <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#0b0c10" />
+  <title>glitchantenna.tv — simple antenna, strange stations</title>
+  <meta name="description" content="A tiny broadcast node that sometimes wakes up. Press ? to reveal the operator. Press b to toggle consciousness." />
+  <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230f1117'/%3E%3Cpath d='M6 16h20' stroke='%239aa0aa' stroke-width='2'/%3E%3C/svg%3E" />
 
   <style>
     :root{
-      --bg:#0b0c10; --panel:#0f1117; --ink:#e9e9ee; --muted:#9fa4b2;
-      --edge:#272a36; --accent:#00ff88; --warn:#ff6b6b; --gold:#ffd93d;
+      --bg:#0a0b0f; --panel:#0e1016; --ink:#e8e9ed; --muted:#9aa0aa; --edge:#22252f;
+      --accent:#00ff88; --neon:#9ef7d8; --warn:#ff6b6b; --ok:#4ecdc4; --gold:#ffd93d;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:radial-gradient(1200px 600px at 70% -10%, #1a1a2e 0%, var(--bg) 60%);
-      color:var(--ink); font:16px/1.5 ui-sans-serif,system-ui,Segoe UI,Inter,Arial;
-      overflow-y:auto;
+      margin:0; background:
+        radial-gradient(1200px 600px at 70% -10%, #141627 0%, #0b0c12 60%) ,
+        linear-gradient(#0a0b0f,#0a0b0f);
+      color:var(--ink); font:15px/1.45 ui-sans-serif,system-ui,Segoe UI,Inter,Arial;
+      letter-spacing:.01em;
+      transition:filter .35s ease;
     }
     a{color:var(--accent); text-decoration:none}
-    a:hover{text-decoration:underline}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px;position:relative}
-
-    /* HEADER */
-    .nav{display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .wrap{max-width:1100px;margin:0 auto;padding:22px}
+    .top{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      border-bottom:1px solid var(--edge); padding-bottom:10px;
+    }
     .brand{display:flex;align-items:center;gap:10px}
-    .brand .logo{width:30px;height:30px;border-radius:8px;border:1px solid #223;display:block}
-    .brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-    .right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--edge);
-         border-radius:10px;background:#121421;color:var(--ink);cursor:pointer}
+    .logo{width:34px;height:34px;border-radius:8px;border:1px solid #223;background:#0f1117;display:grid;place-items:center}
+    .logo svg{width:22px;height:22px}
+    .tag{font-size:12px;color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--edge);
+         border-radius:10px;background:#121421;color:var(--ink);cursor:pointer;font-size:13px}
     .btn:hover{background:#171a28}
     .btn.ghost{background:transparent}
-    .switch{padding:8px 10px;border-radius:999px;border:1px solid var(--edge);cursor:pointer}
-    .switch.active{box-shadow:0 0 0 2px rgba(0,255,136,.2) inset}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--edge);
+          border-radius:999px;font-size:12px;color:var(--muted)}
+    .pill.badge{border-color:#2a3042;color:#cfd2dc;background:#121421}
+    .pill.is-on{box-shadow:0 0 16px rgba(0,255,136,.25), inset 0 0 0 1px rgba(0,255,136,.5); color:#dffdf3}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr; gap:14px; margin-top:14px}
+    .card{background:rgba(255,255,255,0.02);border:1px solid var(--edge);border-radius:14px;padding:16px}
+    h1{font-size:36px;line-height:1.12;margin:0 0 6px}
+    h2{font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 8px}
+    .screen{height:320px;background:#0b0d15;border:1px solid #232635;border-radius:10px;overflow:auto;position:relative}
+    .crt:before{
+      content:""; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(transparent 80%, rgba(255,255,255,.06)), 
+                 repeating-linear-gradient(transparent,transparent 2px, rgba(0,0,0,.08) 3px);
+      mix-blend-screen;
+    }
+    .log{height:100%; padding:10px; font:13px/1.3 ui-monospace,Menlo,Consolas,monospace}
+    .logline{margin:0 0 4px 0; color:#cfd2dc}
+    .logline.awake{color:#9ef7d8}
+    .logline.asleep{color:#9aa0aa}
+    .artifact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .artifact{border:1px dashed #2a2f3e;background:#0d1018;border-radius:10px;padding:10px}
+    .artifact .k{font-size:11px;color:var(--muted)}
+    .artifact .title{font-weight:700;margin:2px 0 4px}
+    .artifact .small{font-size:12px;color:#cdd0da}
+    .footer{margin-top:14px;color:var(--muted);font-size:12px}
 
-    /* GRID */
-    .grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:20px;margin-top:20px}
-    .card{background:rgba(255,255,255,0.02);border:1px solid var(--edge);border-radius:14px;padding:16px;position:relative;overflow:hidden}
-    h1{font-size:36px;line-height:1.1;margin:6px 0 8px}
-    h2{font-size:18px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 8px}
-    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-    .k{color:var(--muted);font-size:13px}
+    /* Conscious mood shift */
+    body.is-conscious{ filter:hue-rotate(16deg) saturate(1.08) }
 
-    /* Broadcast log (left) */
-    #crt{height:280px;border:1px solid #1c1f2a;border-radius:12px;padding:12px;background:#0a0c12;position:relative;overflow:hidden}
-    #crt:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);pointer-events:none}
-    .scan{position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,255,136,.06),transparent);
-      mix-blend-mode:screen;animation:scan 6s linear infinite;opacity:.25}
-    @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
-    #log{font-size:14px;white-space:pre-wrap}
+    /* Operator overlay ( ? ) */
+    .op{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;z-index:9999}
+    .op.on{display:block}
+    .op .inner{max-width:820px;margin:6vh auto;background:#0e1016;border:1px solid var(--edge);
+      border-radius:12px;padding:16px}
+    .op h3{margin:0 0 10px;color:#cfd2dc}
+    .op .rows{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font:12px ui-monospace,Menlo,Consolas}
+    .kv .key{color:var(--muted)}
+    .hotkeys{font-size:12px;color:#cfd2dc}
+    .beacon{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin-left:6px}
+    .beacon.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
 
-    /* Artifacts */
-    .list a{display:block;padding:10px 12px;border:1px solid var(--edge);border-radius:10px;margin:8px 0;background:#0e111a}
-    .list a span{display:block}
-    .pill{display:inline-block;padding:3px 8px;border:1px solid var(--edge);border-radius:999px;font-size:12px;color:var(--muted)}
-
-    /* Modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:50}
-    .modal.show{display:flex}
-    .modal .box{background:#0e1118;border:1px solid var(--edge);border-radius:14px;max-width:760px;width:90%;max-height:85vh;overflow:auto;padding:16px}
-    .x{position:absolute;top:10px;right:14px;cursor:pointer;color:var(--muted)}
-
-    /* Conscious sparkles */
-    #spark{pointer-events:none;position:fixed;inset:0;opacity:0;transition:opacity .3s}
-    body.conscious #spark{opacity:.9}
-    #spark i{position:absolute;width:2px;height:2px;background:#00ff88;border-radius:50%;filter:drop-shadow(0 0 2px #00ff88)}
-
-    /* Footer */
-    .foot{margin:28px 0 8px;color:var(--muted);font-size:12px}
-
-    @media (max-width:900px){ .grid{grid-template-columns:1fr}}
+    @media (max-width:920px){ .grid{grid-template-columns:1fr} .screen{height:260px} .op .rows{grid-template-columns:1fr} }
   </style>
 </head>
-  <!-- ===== Hotkeys + Mobile Buttons for Glitch Antenna ===== -->
-<style>
-  .hud-buttons{position:fixed;right:14px;bottom:14px;display:flex;gap:8px;z-index:1000}
-  .hud-buttons .pill{background:#0f1117;border:1px solid #2a2d38;color:#e9e9ee;
-    border-radius:999px;padding:8px 10px;font:12px/1 ui-monospace,Menlo,Consolas;opacity:.9}
-  .hud-buttons .pill:active{transform:scale(.98)}
-  .op-note{position:fixed;inset:auto 14px 74px 14px;background:#0f1117;border:1px solid #2a2d38;
-    border-radius:10px;padding:12px;color:#cfd2da;max-height:40vh;overflow:auto;z-index:999;display:none}
-  .op-note.show{display:block}
-  .conscious-glow{position:fixed;inset:0;pointer-events:none;background:
-    radial-gradient(600px 300px at 80% 110%, rgba(0,255,136,.08), transparent),
-    radial-gradient(500px 260px at 10% 90%, rgba(136,68,255,.08), transparent); 
-    opacity:0;transition:opacity .25s;z-index:200}
-  .conscious-glow.on{opacity:1}
-</style>
-
-<div id="consciousGlow" class="conscious-glow"></div>
-
-<div class="op-note" id="operatorNote" aria-live="polite">
-  <div style="font-weight:700;color:#00ff88;margin-bottom:6px">Operator Note</div>
-  <div id="operatorNoteBody">
-    “Undefined behavior is indistinguishable from art.”  
-    <br>Press <b>?</b> or tap <b>Note</b> to toggle.  
-    <br>Press <b>b</b> or tap <b>Conscious</b> to toggle the station’s “conscious mode”.
-  </div>
-</div>
-
-<div class="hud-buttons" id="hud">
-  <button class="pill" id="btnNote" title="Toggle operator note">Note</button>
-  <button class="pill" id="btnConscious" title="Toggle conscious mode">Conscious</button>
-</div>
-
-<script>
-  // If your page already has functions, hook them here; otherwise use these defaults.
-  const opNote = document.getElementById('operatorNote');
-  const glow   = document.getElementById('consciousGlow');
-
-  function toggleOperatorNote(){
-    opNote.classList.toggle('show');
-  }
-  function toggleConscious(){
-    glow.classList.toggle('on');
-    document.body.classList.toggle('is-conscious');
-    // Optional: fire a custom event other scripts can listen for
-    window.dispatchEvent(new CustomEvent('glitchantenna:conscious', {
-      detail: { on: document.body.classList.contains('is-conscious') }
-    }));
-  }
-
-  // Mobile buttons
-  document.getElementById('btnNote').addEventListener('click', toggleOperatorNote);
-  document.getElementById('btnConscious').addEventListener('click', toggleConscious);
-
-  // Keyboard hotkeys: '?' and 'b'
-  document.addEventListener('keydown', (e)=>{
-    // '?' on many keyboards is Shift + '/'
-    if ((e.key === '?' ) || (e.shiftKey && e.key === '/')) { e.preventDefault(); toggleOperatorNote(); }
-    if (e.key.toLowerCase() === 'b') { e.preventDefault(); toggleConscious(); }
-  });
-</script>
-<!-- ===== /Hotkeys + Mobile Buttons ===== -->
 <body>
-  <div id="spark"></div>
-
   <div class="wrap">
-    <!-- HEADER -->
-    <div class="nav">
+    <div class="top">
       <div class="brand">
-        <!-- inline $GLOOP logo -->
-        <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
-          <rect width="100" height="100" rx="16" fill="#0f1117"/>
-          <circle cx="50" cy="50" r="40" fill="none" stroke="#00ff88" stroke-width="6"/>
-          <circle cx="35" cy="38" r="8" fill="#00ff88"/>
-          <circle cx="65" cy="38" r="8" fill="#00ff88"/>
-          <path d="M25 56h15c0 10 9 18 20 18s20-8 20-18h15" stroke="#00ff88" stroke-width="6" fill="none" stroke-linecap="round"/>
-        </svg>
+        <div class="logo" title="glitchantenna">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#0f1117"/>
+            <circle cx="16" cy="16" r="8" fill="#00ff88" opacity=".18"/>
+            <path d="M7 16h18" stroke="#e8e9ed" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div>
-          <strong>Glitch Antenna</strong>
-          <small>“I am a simple antenna.” — broadcasting from the void</small>
+          <strong>glitchantenna.tv</strong>
+          <div class="tag">simple antenna • strange stations</div>
         </div>
       </div>
-      <div class="right">
-        <button id="brain" class="switch" title="Toggle conscious mode">🧠</button>
-        <a class="btn" href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">Tune</a>
-        <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">$GLOOP site</a>
-        <a class="btn" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
+      <div class="cta">
+        <span id="consciousToggle" class="pill badge" role="button" title="Toggle consciousness (b)">
+          Conscious: <b id="cState">off</b>
+        </span>
+        <span class="pill" title="site callsign">Node: <b id="callsign">N0-000</b></span>
+        <button id="tuneBtn" class="btn">Tune channel</button>
+        <button id="helpBtn" class="btn ghost" title="Operator (?)">?</button>
       </div>
     </div>
 
-    <!-- GRID -->
     <div class="grid">
-      <!-- LEFT: Broadcast log -->
       <section class="card">
-        <h2>broadcast.log</h2>
-        <div id="crt">
-          <div class="scan"></div>
-          <div id="log" class="mono"></div>
-        </div>
-        <div style="margin-top:10px" class="k">
-          Tip: press <span class="pill">?</span> to reveal the operator note. Press <span class="pill">b</span> to toggle conscious mode.
+        <h2>broadcast</h2>
+        <div class="screen crt">
+          <div id="log" class="log" aria-live="polite"></div>
         </div>
       </section>
 
-      <!-- RIGHT: Now tuning -->
-      <section class="card">
-        <h2>now tuning</h2>
-        <h1>signal ↔ noise</h1>
-        <p class="k">Welcome to <span class="mono">glitchantenna.tv</span> — a tiny station where undefined behavior looks suspiciously like art. Sometimes we broadcast reruns from the <span class="mono">giggle.loop</span>. Sometimes we mint what leaks.</p>
-        <pre class="mono" style="background:#0e111a;border:1px solid #232635;border-radius:10px;padding:10px;margin-top:10px">
-antenna.boot()
-  → lock(channel="void.tv")
-  → catch(punchline)
-  → rebroadcast as artifact
-        </pre>
-        <div style="margin-top:12px" class="right">
-          <button id="openArtifacts" class="btn">View artifacts</button>
-          <button id="openNote" class="btn ghost">Reveal operator note (?)</button>
+      <aside class="card">
+        <h2>artifacts</h2>
+        <div id="artifactGrid" class="artifact-grid"></div>
+        <div class="footer">Press <b>?</b> for operator, <b>b</b> for consciousness. This node can mesh with siblings.</div>
+      </aside>
+    </div>
+
+    <div class="footer">© <span id="year"></span> Glitch Antenna • “Undefined behavior is indistinguishable from art.”</div>
+  </div>
+
+  <!-- Operator overlay -->
+  <div id="op" class="op" aria-hidden="true">
+    <div class="inner">
+      <h3>Operator</h3>
+      <div class="rows">
+        <div class="kv">
+          <div class="key">Callsign</div><div id="opCall">—</div>
+          <div class="key">Conscious</div><div id="opConscious">false</div>
+          <div class="key">Channel</div><div id="opChan">void.tv</div>
+          <div class="key">Mesh</div><div>handshake <span id="meshBeacon" class="beacon"></span></div>
         </div>
-      </section>
-    </div>
-
-    <!-- RERUN ARTIFACTS -->
-    <section class="card" style="margin-top:16px">
-      <h2>rerun artifacts</h2>
-      <p class="k">A small shelf of canonical bits. More soon™.</p>
-      <div class="list">
-        <a href="https://magiceden.us/mint-terminal/ethereum/0xf3c978e11a1e59e12e9e412b1857ff3135f5188b" target="_blank" rel="noopener">
-          <span><strong>Paradox Heckler</strong> — Episode Card</span>
-          <span class="k mono">Magic Eden · ETH</span>
-        </a>
-        <a href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">
-          <span><strong>$GLOOP</strong> — the giggle loop that escaped</span>
-          <span class="k mono">Lore site</span>
-        </a>
-        <a href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">
-          <span><strong>$GLOOP</strong> — token page</span>
-          <span class="k mono">pump.fun · SOL</span>
-        </a>
+        <div class="hotkeys">
+          <div><b>b</b> — toggle consciousness</div>
+          <div><b>?</b> — toggle operator overlay</div>
+          <div><b>n</b> — retune channel</div>
+          <div><b>c</b> — attempt mesh connect</div>
+        </div>
       </div>
-    </section>
-
-    <!-- FOOTER -->
-    <div class="foot">
-      © <span id="year"></span> Glitch Antenna. Broadcast responsibly; the void has long memory. ·
-      <span class="k">“Undefined behavior is indistinguishable from art.”</span>
-    </div>
-  </div>
-
-  <!-- MODAL: Artifacts -->
-  <div id="artifactsModal" class="modal" aria-hidden="true">
-    <div class="box">
-      <div class="x" id="closeArtifacts">✕</div>
-      <h2>Artifacts</h2>
-      <p class="k">Things that leaked from the loop and decided to stay.</p>
-      <div class="list" style="margin-top:10px">
-        <a href="https://magiceden.us/mint-terminal/ethereum/0xf3c978e11a1e59e12e9e412b1857ff3135f5188b" target="_blank" rel="noopener">
-          <span><strong>Paradox Heckler</strong> — Episode Card</span>
-          <span class="k mono">Magic Eden · ETH</span>
-        </a>
-        <a href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">
-          <span><strong>$GLOOP</strong> — the giggle loop that escaped</span>
-          <span class="k mono">Lore site</span>
-        </a>
-        <a href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">
-          <span><strong>$GLOOP</strong> — token page</span>
-          <span class="k mono">pump.fun · SOL</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Operator note -->
-  <div id="noteModal" class="modal" aria-hidden="true">
-    <div class="box">
-      <div class="x" id="closeNote">✕</div>
-      <h2>Operator note</h2>
-      <p class="k">If a punchline leaks in the forest of signals and no one tunes in, does the meme still crystallize?</p>
-      <p class="k">House rules: short riffs, low links, no hard sell, keep the loop playful.</p>
     </div>
   </div>
 
   <script>
-    // Year
-    document.getElementById('year').textContent = new Date().getFullYear();
+  (() => {
+    // ---------- UTIL ----------
+    const $ = s => document.querySelector(s);
+    const rand = (a,b)=> a + Math.random()*(b-a);
+    const choose = arr => arr[Math.floor(Math.random()*arr.length)];
 
-    // Broadcast log (animated)
-    const lines = [
-      "[idle] static whispering jokes from another channel…",
-      "lock(channel=\"void.tv\") …ok",
-      "handshake: paradox.squid ↔ pun.shark …unstable",
-      "compile(giggle.loop) → lore.artifact",
-      "rebroadcast: $GLOOP packet // chaos-pegged",
-      "tip: press ? for operator note, b for conscious mode"
+    // ---------- STATE ----------
+    const state = {
+      awake: false,
+      channel: "void.tv",
+      callsign: "N" + (Math.random().toString(16).slice(2,5)).toUpperCase() + "-" + (Math.random().toString(16).slice(2,5)).toUpperCase(),
+      meshTarget: null,   // optional: set via URL ?mesh=https://othersite.tld
+      meshLive: false,
+      timers: { feed:null }
+    };
+
+    // ---------- DOM HOOKS ----------
+    const logEl = $('#log');
+    const artEl = $('#artifactGrid');
+    const pill = $('#consciousToggle');
+    const cState = $('#cState');
+    const yearEl = $('#year');
+    const op = $('#op');
+    const opCall = $('#opCall');
+    const opCon = $('#opConscious');
+    const opChan = $('#opChan');
+    const meshBeacon = $('#meshBeacon');
+
+    // ---------- FEEDS ----------
+    const asleepFeed = [
+      "tuning… carrier locked • noise floor nominal",
+      "scanning: void.tv ↔ antenna handshake",
+      "buffering static • tracking drift",
+      "scheduler: next punchline TBD",
+      "artifact cache idle • awaiting input"
     ];
-    const log = document.getElementById('log');
-    let li = 0;
-    function tick(){
-      const t = new Date().toLocaleTimeString();
-      log.textContent = `[${t}] ${lines[li]}\n` + log.textContent;
-      li = (li+1) % lines.length;
+    const awakeFeed = [
+      "giggle.loop online • meme.stream synced",
+      "paradox.squid returns: knock-knock › observer collapse",
+      "pun.shark: rimshot injected • latency 0.042s",
+      "station note: undefined behavior == art",
+      "broadcasting $GLOOP relics to fringe bands"
+    ];
+
+    const asleepArtifacts = [
+      { tag:"signal", title:"Dial Tone", text:"••• — •• — — •" },
+      { tag:"hardware", title:"Dust Coil", text:"Warm tubes • soft hiss" },
+      { tag:"test", title:"Color Bars", text:"SMPTE but haunted" },
+      { tag:"link", title:"glitchantenna.tv", text:"simple antenna • strange stations" }
+    ];
+    const awakeArtifacts = [
+      { tag:"canon", title:"Observer.Surf v2", text:"Wave collapsed for the camera crew." },
+      { tag:"device", title:"Giggle Field Emitter", text:"Gain +42 dB • laughs/sec ↑" },
+      { tag:"relic", title:"Meme Monolith", text:"Touch to rerun a season." },
+      { tag:"note", title:"$GLOOP static", text:"a joke that minted itself" }
+    ];
+
+    // ---------- FAVICONS ----------
+    const favAsleep = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><path d='M6 16h20' stroke='#9aa0aa' stroke-width='2' stroke-linecap='round'/></svg>`);
+    const favAwake  = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><circle cx='16' cy='16' r='6' fill='#00ff88'/></svg>`);
+    function setFavicon(src){
+      let link = document.querySelector("link[rel='icon']") || document.createElement('link');
+      link.rel = 'icon'; link.href = src; document.head.appendChild(link);
     }
-    tick();
-    setInterval(tick, 2400);
 
-    // Artifacts modal
-    const artModal = document.getElementById('artifactsModal');
-    const openArtifacts = document.getElementById('openArtifacts');
-    const closeArtifacts = document.getElementById('closeArtifacts');
-    openArtifacts.addEventListener('click', ()=> artModal.classList.add('show'));
-    closeArtifacts.addEventListener('click', ()=> artModal.classList.remove('show'));
-    artModal.addEventListener('click', (e)=>{ if(e.target===artModal) artModal.classList.remove('show'); });
+    // ---------- RENDER ----------
+    function write(line, awake=false){
+      const d = document.createElement('div');
+      d.className = 'logline ' + (awake ? 'awake' : 'asleep');
+      d.textContent = line;
+      logEl.appendChild(d);
+      while (logEl.children.length > 150) logEl.removeChild(logEl.firstChild);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
 
-    // Operator note modal (+ keyboard ?)
-    const noteModal = document.getElementById('noteModal');
-    const openNote = document.getElementById('openNote');
-    const closeNote = document.getElementById('closeNote');
-    openNote.addEventListener('click', ()=> noteModal.classList.add('show'));
-    closeNote.addEventListener('click', ()=> noteModal.classList.remove('show'));
-    noteModal.addEventListener('click', (e)=>{ if(e.target===noteModal) noteModal.classList.remove('show'); });
+    function setArtifacts(items){
+      artEl.innerHTML = items.map(it => `
+        <div class="artifact">
+          <div class="k">${it.tag}</div>
+          <div class="title">${it.title}</div>
+          <div class="small">${it.text}</div>
+        </div>
+      `).join('');
+    }
 
-    // Conscious mode (🧠) + sparkles
-    const brain = document.getElementById('brain');
-    const spark = document.getElementById('spark');
-    function seedSparkles(n=220){
-      spark.innerHTML='';
-      const W = window.innerWidth, H = window.innerHeight;
-      for(let i=0;i<n;i++){
-        const p=document.createElement('i');
-        p.style.left = (Math.random()*W)+'px';
-        p.style.top  = (Math.random()*H)+'px';
-        p.style.opacity = (0.3+Math.random()*0.7).toFixed(2);
-        p.style.transform = `scale(${0.5+Math.random()*1.8})`;
-        spark.appendChild(p);
+    function refreshOperator(){
+      opCall.textContent = state.callsign;
+      opCon.textContent = String(state.awake);
+      opChan.textContent = state.channel;
+      meshBeacon.classList.toggle('on', state.meshLive);
+    }
+
+    // ---------- FEED LOOP ----------
+    function startFeed(){
+      stopFeed();
+      logEl.innerHTML = "";
+      write(state.awake ? "— CONSCIOUS BROADCAST —" : "— IDLE CARRIER —", state.awake);
+      const src = state.awake ? awakeFeed : asleepFeed;
+      let i = 0;
+      state.timers.feed = setInterval(()=>{
+        write(src[i % src.length], state.awake);
+        i++;
+        // Occasionally interleave a station ID
+        if (Math.random() < (state.awake ? 0.22 : 0.1)){
+          write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, state.awake);
+        }
+      }, state.awake ? 2100 : 3300);
+    }
+    function stopFeed(){ if (state.timers.feed) { clearInterval(state.timers.feed); state.timers.feed = null; } }
+
+    // ---------- CONSCIOUSNESS TOGGLE ----------
+    function setConscious(on){
+      state.awake = !!on;
+      document.body.classList.toggle('is-conscious', state.awake);
+      $('#cState').textContent = state.awake ? 'on' : 'off';
+      $('#consciousToggle').classList.toggle('is-on', state.awake);
+      setFavicon(state.awake ? favAwake : favAsleep);
+      setArtifacts(state.awake ? awakeArtifacts : asleepArtifacts);
+      refreshOperator();
+      // announce to any sibling iframes (mesh proto)
+      broadcast({ type:'state', awake: state.awake, channel: state.channel, callsign: state.callsign });
+      startFeed();
+    }
+
+    // ---------- CHANNEL TUNER ----------
+    const channels = ["void.tv","world.is","glitchantenna.tv","meme.stream","observer.surf","infinite.reruns"];
+    function tune(){
+      state.channel = choose(channels);
+      write(`retune: ${state.channel}`, state.awake);
+      refreshOperator();
+      broadcast({ type:'tune', channel: state.channel });
+    }
+
+    // ---------- OPERATOR OVERLAY ----------
+    function toggleOp(){
+      op.classList.toggle('on');
+      op.setAttribute('aria-hidden', op.classList.contains('on') ? 'false' : 'true');
+    }
+
+    // ---------- MESH (future sibling handshake) ----------
+    // Optional param: ?mesh=https://other.site/path
+    const urlMesh = new URLSearchParams(location.search).get('mesh');
+    if (urlMesh) state.meshTarget = urlMesh;
+
+    let meshFrame = null;
+    function meshConnect(){
+      if (!state.meshTarget) { write("mesh: no target (add ?mesh=URL)", state.awake); return; }
+      if (meshFrame) { write("mesh: already connected", state.awake); return; }
+      meshFrame = document.createElement('iframe');
+      meshFrame.src = state.meshTarget;
+      meshFrame.style.display = 'none';
+      document.body.appendChild(meshFrame);
+      write(`mesh: dialing ${state.meshTarget}`, state.awake);
+      setTimeout(()=> {
+        try {
+          meshFrame.contentWindow.postMessage({ hello:true, from:location.origin, callsign:state.callsign }, "*");
+        } catch(e){}
+      }, 1200);
+    }
+    function broadcast(msg){
+      // post to sibling frame if present
+      if (meshFrame && meshFrame.contentWindow){
+        try { meshFrame.contentWindow.postMessage({ mesh:true, from:location.origin, msg }, "*"); } catch(e){}
       }
+      // also raise a custom event for local listeners
+      window.dispatchEvent(new CustomEvent('glitchantenna:broadcast', { detail: msg }));
     }
-    seedSparkles();
-    brain.addEventListener('click', ()=>{
-      document.body.classList.toggle('conscious');
-      brain.classList.toggle('active');
-      // shimmer
-      [...spark.children].forEach((d)=>{
-        const dx=(Math.random()-.5)*8, dy=(Math.random()-.5)*8;
-        d.animate([{transform:d.style.transform},
-          {transform:`${d.style.transform} translate(${dx}px,${dy}px)`}],
-          {duration:600+Math.random()*1200,fill:'forwards'});
-      });
+    window.addEventListener('message', (e)=>{
+      // best-effort listen; trust is manual for now
+      if (!e.data) return;
+      if (e.data.hello){ state.meshLive = true; refreshOperator(); write(`mesh: handshake with ${e.origin||'peer'}`, state.awake); }
+      if (e.data.mesh && e.data.msg){
+        const m = e.data.msg;
+        if (m.type === 'state'){ write(`mesh: peer ${m.awake?'AWAKE':'SLEEP'}`, state.awake); }
+        if (m.type === 'tune'){ write(`mesh: peer tuned ${m.channel}`, state.awake); }
+      }
     });
 
-    // Keyboard shortcuts
-    window.addEventListener('keydown',(e)=>{
-      if(e.key==='?'){ noteModal.classList.add('show'); }
-      if(e.key==='b'){ brain.click(); }
-      if(e.key==='Escape'){ artModal.classList.remove('show'); noteModal.classList.remove('show'); }
+    // ---------- WIRE UP ----------
+    yearEl.textContent = new Date().getFullYear();
+    $('#callsign').textContent = state.callsign;
+    pill.addEventListener('click', ()=> setConscious(!state.awake));
+    $('#helpBtn').addEventListener('click', toggleOp);
+    $('#tuneBtn').addEventListener('click', tune);
+
+    // hotkeys
+    window.addEventListener('keydown', (e)=>{
+      if (e.key === '?') toggleOp();
+      if (e.key.toLowerCase() === 'b') setConscious(!state.awake);
+      if (e.key.toLowerCase() === 'n') tune();
+      if (e.key.toLowerCase() === 'c') meshConnect();
     });
+
+    // boot
+    setArtifacts(asleepArtifacts);
+    setConscious(false);
+
+    // fire an initial station ID line
+    setTimeout(()=> write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, false), 400);
+
+    // expose a tiny API for future sites/tools
+    window.glitchantenna = {
+      setConscious, tune, meshConnect,
+      ping(){ write("ping • ok", state.awake); },
+      id: () => state.callsign
+    };
+
+    // Example: listen to your page’s old event if it exists
+    window.addEventListener('glitchantenna:conscious', (e)=>{
+      const on = !!(e.detail && e.detail.on);
+      setConscious(on);
+    });
+  })();
   </script>
 </body>
 </html>
