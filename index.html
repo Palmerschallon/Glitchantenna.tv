@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Glitch Antenna · tune the void</title>
 <meta name="description" content="An analog-conscious tuner for the weird web. Static resolves to signal; hold to lock and jump.">
-<style>
+
+ /* conscious mode visuals */
+body.is-conscious .crt {
+  box-shadow: 0 0 28px rgba(0,255,136,.18) inset;
+}
+body.is-conscious {
+  filter: hue-rotate(12deg) saturate(1.05);
+} 
+  <style>
   :root{
     --bg:#0a0b0f;--ink:#e8e9ed;--muted:#8a8f9d;--edge:#20232f;--accent:#00ff88;--warn:#ff5d5d;
     --bezel:#0d1017;--bezel-edge:#1b1e2a;--phosphor:#91ffa8;
