@@ -7,73 +7,78 @@
 
 <style>
 :root{
-  --bg:#0a0b0f; --panel:#10131a; --ink:#e9e9ee; --muted:#98a0b3;
-  --edge:#242838; --accent:#00ff88; --warn:#ff6b6b; --ok:#4ecdc4;
-  --phosphor:#7affb7; --glow:rgba(0,255,136,.18);
+  --bg:#0a0b0f; --panel:#0f1219; --ink:#ecf0f7; --muted:#97a0b4;
+  --edge:#242a3a; --accent:#00ff88; --glow:rgba(0,255,136,.22);
+  --warn:#ff6b6b; --ok:#4ecdc4;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#171a2c 0%,var(--bg) 60%);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace}
+body{margin:0;background:#0b0e15;color:var(--ink);font:14px/1.55 ui-monospace,Menlo,Consolas,monospace}
 
-/* Layout */
-.wrap{max-width:1100px;margin:0 auto;padding:14px}
-.header{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
-.brand{display:flex;align-items:center;gap:10px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--glow)}
+/* layout */
+.wrap{max-width:1100px;margin:0 auto;padding:12px}
+.header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.brand{display:flex;gap:10px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--glow)}
 .k{color:var(--muted)}
-.right{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.badge{border:1px solid var(--edge);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.02)}
-.btn{border:1px solid var(--edge);background:#121521;color:var(--ink);padding:8px 10px;border-radius:8px;cursor:pointer}
-.btn:hover{background:#171a28}
-a.btn{display:inline-block;text-decoration:none}
-.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
-.card{background:rgba(255,255,255,.02);border:1px solid var(--edge);border-radius:12px;padding:12px}
+.controls{display:flex;gap:8px;align-items:center;margin-left:auto}
+.btn{border:1px solid var(--edge);background:#121525;color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
+.btn:active{transform:translateY(1px)}
+.badge{border:1px solid var(--edge);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.02)}
+.speaker{cursor:pointer}
 
-/* --- CRT Tuner --- */
-#tuner{height:230px;border:3px solid #2a2d3b;border-radius:14px;position:relative;overflow:hidden;
-  background:black;box-shadow:inset 0 0 24px var(--glow),0 0 40px rgba(0,0,0,.25)}
-#crtCanvas{width:100%;height:100%;display:block}
-#tuner::after{/* scanlines */content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(to bottom, rgba(122,255,183,.14) 0 2px, rgba(0,0,0,0) 2px 4px);
-  mix-blend-mode:overlay;pointer-events:none}
-#tuner::before{/* slight vignette */content:"";position:absolute;inset:-20px;
-  background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.5) 100%);
-  pointer-events:none}
-#dial{position:absolute;left:14px;right:14px;bottom:12px;height:18px;border:1px solid #364; border-radius:6px;
-  background:linear-gradient(90deg,#1b1f29,#171a23);display:flex;align-items:center}
-#thumb{width:10px;height:26px;background:var(--accent);border-radius:3px;box-shadow:0 0 12px var(--glow);position:absolute;top:-4px;transform:translateX(-50%);cursor:ew-resize}
-.scale{position:absolute;left:0;right:0;top:-12px;display:flex;justify-content:space-between;font-size:11px;color:#8fb}
-.signalLamp{position:absolute;top:10px;right:12px;background:#142018;border:1px solid #2e5; color:#9f9; padding:2px 6px;border-radius:6px;font-size:11px}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+@media (max-width:900px){ .grid{grid-template-columns:1fr; } }
 
-/* Broadcast log */
-.log{height:300px;overflow:auto;background:#0d0f16;border:1px solid var(--edge);border-radius:12px;padding:10px;color:#d7e0f0}
-.log .ts{color:#7aa}
-.log .dim{color:#8a93a9}
+.card{background:rgba(255,255,255,.02);border:1px solid var(--edge);border-radius:14px;padding:12px}
 
-/* Artifacts */
+/* CRT */
+#tuner{height:280px;border:3px solid #2b2f40;border-radius:14px;position:relative;overflow:hidden;background:black;
+  box-shadow:inset 0 0 24px var(--glow),0 0 40px rgba(0,0,0,.25)}
+#crt{width:100%;height:100%;display:block}
+#scan{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:
+  repeating-linear-gradient(to bottom, rgba(122,255,183,.10) 0 2px, rgba(0,0,0,0) 2px 4px)}
+#vignette{position:absolute;inset:-20px;pointer-events:none;background:
+  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%)}
+
+#dial{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border:1px solid #2f3b3f;border-radius:10px;
+  background:linear-gradient(180deg,#171b26,#0f121a);display:flex;align-items:center}
+#thumb{width:18px;height:34px;background:var(--accent);border-radius:5px;box-shadow:0 0 14px var(--glow);
+  position:absolute;top:-3px;transform:translateX(-50%);cursor:ew-resize;touch-action:none}
+.scale{position:absolute;left:8px;right:8px;top:-14px;display:flex;justify-content:space-between;font-size:11px;color:#8fb}
+.signal{position:absolute;top:10px;right:10px;background:#142018;border:1px solid #2e5;color:#aff;padding:2px 8px;border-radius:8px;font-size:11px}
+
+/* log */
+.log{height:300px;overflow:auto;background:#0c0f16;border:1px solid var(--edge);border-radius:12px;padding:10px}
+.log .dim{color:#8ea0b9}
+
+/* artifacts */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{border:1px solid var(--edge);background:#0e1118;border-radius:10px;padding:10px;cursor:pointer;position:relative}
-.tile:hover{background:#141829}
+.tile{border:1px solid var(--edge);background:#0f1320;border-radius:12px;padding:10px;cursor:pointer}
+.tile:hover{background:#161a2a}
 .tile small{color:var(--muted)}
-.rotaNote{font-size:11px;color:var(--muted);margin-top:8px}
+.rota{font-size:11px;color:var(--muted);margin-top:8px}
 
-/* overlays */
-#bars,#degauss,#glitch{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
-#bars{background:linear-gradient(to right,#fff 16.6%,#fff0 16.6%), 
-        linear-gradient(to right,#f00 0 16.6%,#0f0 16.6% 33.2%,#00f 33.2% 49.8%,#fff 49.8% 66.4%,#f0f 66.4% 83%,#0ff 83% 100%);
-  mix-blend-mode:screen;filter:saturate(1.1) brightness(1.05)}
-#degauss{background:radial-gradient(circle at 50% 50%, rgba(0,255,153,.45), transparent 60%);filter:blur(12px)}
-#glitch{background:repeating-linear-gradient( to bottom, rgba(255,0,128,.15) 0 2px, rgba(0,0,0,0) 2px 4px );}
+/* preview modal */
+#jump{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
+.box{width:min(920px,94vw);max-height:86vh;background:#0f1219;border:1px solid var(--edge);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:1fr 320px}
+@media (max-width:900px){ .box{grid-template-columns:1fr} }
+.prev{background:black;min-height:340px;position:relative}
+.prev iframe{width:100%;height:100%;border:0}
+.prev .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb;background:radial-gradient(ellipse at center,#0b0f18 0%,#070a10 70%)}
+.side{padding:14px;border-left:1px solid var(--edge)}
+.side .u{color:#9fb}
+.actions{display:flex;gap:8px;margin-top:12px}
+.xbtn{padding:10px 12px;border:1px solid var(--edge);border-radius:10px;background:#121525;color:var(--ink);cursor:pointer}
+.xbtn.primary{background:var(--accent);color:#00170c;border-color:#00c86d}
 
-.footer{margin-top:10px;color:var(--muted);font-size:12px}
-.linkrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.linkrow a{border:1px solid var(--edge);padding:6px 10px;border-radius:999px;text-decoration:none;color:var(--ink);background:#121521}
-.linkrow a:hover{background:#171a28}
-
-/* Operator note */
-#opNote{display:none;margin-top:10px;color:#c9d2e8;font-size:12px;border:1px dashed #3a3f55;border-radius:10px;padding:10px}
-.noteKey{color:#9fb}
-.speaker{cursor:pointer;margin-left:8px}
+/* overlays for CRT */
+#bars,#glitch,#degauss{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
+#bars{background:linear-gradient(to right,#fff 16.66%,#fff0 16.66%),
+  linear-gradient(to right,#f00 0 16.66%,#0f0 16.66% 33.32%,#00f 33.32% 49.98%,#fff 49.98% 66.64%,#f0f 66.64% 83.3%,#0ff 83.3% 100%);
+  filter:saturate(1.1) brightness(1.05);mix-blend-mode:screen}
+#glitch{background:repeating-linear-gradient(to bottom, rgba(255,0,128,.18) 0 2px, transparent 2px 4px)}
+#degauss{background:radial-gradient(circle at 50% 50%, rgba(0,255,153,.5), transparent 60%);filter:blur(12px)}
 </style>
 
 <body>
@@ -82,239 +87,282 @@ a.btn{display:inline-block;text-decoration:none}
     <div class="brand"><span class="dot"></span>
       <div><strong>glitchantenna.tv</strong><br><span class="k">simple antenna • strange stations</span></div>
     </div>
-    <div class="right">
-      <span class="badge">Conscious: <span id="consciousState">off</span></span>
+    <div class="controls">
+      <button class="btn" id="conBtn">Conscious: off</button>
       <span class="badge">Node: <span id="nodeId"></span></span>
-      <button class="btn" id="retuneBtn">Tune channel</button>
-      <span class="badge speaker" id="muteBtn">🔊</span>
+      <button class="btn" id="retune">Tune channel</button>
+      <span class="badge speaker" id="mute">🔊</span>
     </div>
   </div>
 
   <div class="grid">
-    <!-- LEFT: CRT TUNER + LOG -->
+    <!-- left -->
     <div class="card">
       <div id="tuner">
-        <canvas id="crtCanvas"></canvas>
+        <canvas id="crt"></canvas>
+        <div id="scan"></div>
+        <div id="vignette"></div>
         <div id="bars"></div>
         <div id="glitch"></div>
         <div id="degauss"></div>
-        <div class="signalLamp">signal: <span id="sigPct">0%</span></div>
-        <div id="dial">
-          <div class="scale"><span>static</span><span>signal</span></div>
-          <div id="thumb"></div>
-        </div>
+        <div class="signal">signal: <span id="sig">0%</span></div>
+        <div id="dial"><div class="scale"><span>static</span><span>signal</span></div><div id="thumb"></div></div>
       </div>
-
-      <div class="log" id="log"></div>
+      <div id="log" class="log"></div>
     </div>
 
-    <!-- RIGHT: ARTIFACTS -->
+    <!-- right -->
     <div class="card">
-      <h3 style="margin:0 0 8px">ARTIFACTS</h3>
-      <div class="tiles" id="tiles"></div>
-      <div class="rotaNote">Press <strong>?</strong> for operator note, <strong>b</strong> for consciousness. Drag the tuner. Pause on a station to auto-jump.</div>
-      <div id="opNote">
-        <div class="noteKey">operator.note</div>
-        This node soft-locks onto nearby carriers and rebroadcasts leaks as artifacts. When conscious, jitter increases before lock (it wants to find jokes).
+      <h3 style="margin:4px 0 10px">ARTIFACTS</h3>
+      <div id="tiles" class="tiles"></div>
+      <div class="rota">Tiles rotate every ~12s. Tap “Conscious” (or press <b>b</b>) to change tuner behavior. Press <b>?</b> for note.</div>
+      <div id="note" style="display:none;margin-top:10px;border:1px dashed var(--edge);border-radius:12px;padding:10px;color:#cde">
+        <b>operator.note</b> — Conscious mode adds pre-lock jitter (it “hunts” for jokes). Holding dial near a station prompts a jump; preview tries to embed, otherwise shows a safe card.
       </div>
-
-      <div class="linkrow" style="margin-top:12px">
-        <a href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">X / antenna</a>
-        <a href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
-        <a href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">Manus white page</a>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">X / antenna</a>
+        <a class="btn" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
+        <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">Manus white page</a>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="footer k">© 2025 Glitch Antenna — “Undefined behavior is indistinguishable from art.”</div>
+<!-- jump / preview modal -->
+<div id="jump">
+  <div class="box">
+    <div class="prev"><iframe id="iframe" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"></iframe>
+      <div class="fallback" id="fallback" hidden>
+        <div>
+          <div style="opacity:.8">preview blocked by site</div>
+          <div id="fallUrl" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="u">station.lock()</div>
+      <div style="font-size:18px;margin:4px 0 2px"><b id="stName"></b></div>
+      <div id="stUrl" class="k"></div>
+      <div class="actions">
+        <button class="xbtn" id="stay">Stay</button>
+        <button class="xbtn primary" id="visit">Visit</button>
+      </div>
+      <div style="margin-top:10px;color:var(--muted);font-size:12px">
+        Some sites deny embedding; if the preview stays blank we show a safe card instead.
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-/* ---------- Helpers ---------- */
+/* util */
 const $ = s => document.querySelector(s);
-const logEl = $('#log');
-function log(line){ const t = new Date().toLocaleTimeString(); logEl.innerHTML = `[${node}] ${t}  ${line}<br>` + logEl.innerHTML; }
-
-/* ---------- Node + State ---------- */
+const logEl = $('#log'); const sigEl = $('#sig');
 const node = (Math.random().toString(16).slice(2,6)+'-'+Math.random().toString(16).slice(2,5)).toUpperCase();
 $('#nodeId').textContent = node;
-let conscious = false;
-$('#consciousState').textContent = 'off';
+function log(t){ const ts = new Date().toLocaleTimeString(); logEl.innerHTML = `[${node}] ${ts}  ${t}<br>` + logEl.innerHTML; }
 
-/* ---------- Stations (dial positions 0..1) ---------- */
+/* stations */
 const stations = [
-  { name:'void.tv', pos:0.18, url:'https://void.tv', color:'#9ff'},
-  { name:'glitchantenna', pos:0.42, url:'https://glitchantenna.tv', color:'#0f8'},
-  { name:'$GLOOP site', pos:0.63, url:'https://58hpi8cw0n3q.manus.space/', color:'#0f8'},
-  { name:'pump.fun', pos:0.82, url:'https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump', color:'#0f8'}
+  { name:'void.tv', pos:0.18, url:'https://void.tv' },
+  { name:'glitchantenna', pos:0.42, url:'https://glitchantenna.tv' },
+  { name:'$GLOOP site', pos:0.63, url:'https://58hpi8cw0n3q.manus.space/' },
+  { name:'pump.fun', pos:0.82, url:'https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump' }
 ];
-let dial = 0.05;              // 0..1
-let holdStart = 0;
+
+/* state */
+let dial = 0.07;
+let conscious = false;
+let dragging = false;
+let holdStart = 0;    // for jump prompt dwell time
 let lastNear = null;
 
-/* ---------- CRT + Static ---------- */
-const c = $('#crtCanvas'), ctx = c.getContext('2d');
-const bars = $('#bars'), glitch = $('#glitch'), degauss = $('#degauss'), sigPct = $('#sigPct');
-function resize(){ c.width = c.clientWidth; c.height = c.clientHeight; }
-addEventListener('resize', resize); resize();
+/* audio (needs user action) */
+const AC = window.AudioContext || window.webkitAudioContext;
+let actx, outGain, noiseSrc, noiseGain, muted=false;
+function initAudio(){
+  if(actx) return;
+  actx = new AC();
+  outGain = actx.createGain(); outGain.gain.value = 0.18; outGain.connect(actx.destination);
+  // noise
+  const len = 2*actx.sampleRate;
+  const buf = actx.createBuffer(1,len,actx.sampleRate);
+  const data = buf.getChannelData(0); for(let i=0;i<len;i++) data[i] = Math.random()*2-1;
+  noiseSrc = actx.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
+  noiseGain = actx.createGain(); noiseGain.gain.value = 0.22;
+  noiseSrc.connect(noiseGain).connect(outGain); noiseSrc.start();
+}
+$('#mute').addEventListener('click',()=>{ initAudio(); muted=!muted; outGain.gain.value = muted?0:0.18; $('#mute').textContent = muted?'🔈':'🔊'; });
 
-let jitter = 0;
-function signalAt(x){
-  let s = 0; let target=null;
-  stations.forEach(st=>{
-    const d = Math.abs(x - st.pos);
-    const local = Math.max(0, 1 - (d/0.05)); // strength within ~5% window
-    if(local > s){ s = local; target = st; }
+/* conscious toggle (button + key) */
+function setConscious(v){
+  conscious = v;
+  $('#conBtn').textContent = `Conscious: ${conscious?'on':'off'}`;
+  log(`conscious=${conscious}`);
+}
+$('#conBtn').addEventListener('click',()=>setConscious(!conscious));
+addEventListener('keydown',e=>{
+  if(e.key==='b'){ setConscious(!conscious); }
+  if(e.key==='?'){ const n=$('#note'); n.style.display = n.style.display==='none'?'block':'none'; }
+});
+
+/* CRT render */
+const canvas = $('#crt'), ctx = canvas.getContext('2d');
+const bars = $('#bars'), glitch = $('#glitch'), degauss = $('#degauss');
+function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+addEventListener('resize',resize); resize();
+
+function nearestSignal(x){
+  let best = {strength:0, target:null};
+  stations.forEach(s=>{
+    const d = Math.abs(x - s.pos);
+    const falloff = 0.06; // lock width
+    const str = Math.max(0, 1 - (d/falloff));
+    if(str > best.strength) best = {strength:str, target:s};
   });
-  return {strength: s, target};
+  return best;
 }
 
-function drawCRT(){
-  const {width:w,height:h} = c;
-  // base static
+function render(){
+  const w=canvas.width, h=canvas.height;
+  const {strength, target} = nearestSignal(dial);
+
+  // analog-looking noise: centered distribution + contrast curve
   const img = ctx.createImageData(w,h);
-  const {strength,target} = signalAt(dial);
-  const noise = Math.round(255*(1 - 0.75*strength));
+  const baseContrast = 0.85 - 0.45*strength;   // more signal -> less contrast noise
+  const bias = 0.5 + (Math.random()-0.5)*0.02; // tiny drift to avoid uniformity
   for(let i=0;i<img.data.length;i+=4){
-    const n = noise + Math.random()* (60 - 40*strength);
-    img.data[i]=img.data[i+1]=img.data[i+2]=n; img.data[i+3]=255;
+    // Box-Muller for gaussian-ish noise
+    const u=Math.random()||1e-9, v=Math.random()||1e-9;
+    let n=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+    n = (n*0.25 + bias);                    // mean around 0.5
+    n = (n - 0.5)*baseContrast + 0.5;       // contrast
+    n = Math.max(0, Math.min(1, n));
+    const g = Math.floor(n*255);
+    img.data[i]=img.data[i+1]=img.data[i+2]=g; img.data[i+3]=255;
   }
   ctx.putImageData(img,0,0);
 
-  // tracking roll (horizontal line)
-  const lineY = (performance.now()/20) % h;
-  ctx.fillStyle = `rgba(122,255,183,${0.08+0.12*(1-strength)})`;
-  ctx.fillRect(0,lineY, w, 2);
+  // tracking line
+  const lineY = (performance.now()/18) % h;
+  ctx.fillStyle = `rgba(150,255,200,${0.06 + 0.10*(1-strength)})`;
+  ctx.fillRect(0, lineY, w, 2);
 
-  // slight jitter if conscious / far from station
-  const j = (conscious ? 2.2 : 1.2) * (1-strength);
-  jitter = jitter*0.9 + j*0.1;
-  ctx.save();
-  ctx.globalAlpha = 0.2;
-  ctx.translate((Math.random()-0.5)*jitter, (Math.random()-0.5)*jitter);
-  ctx.drawImage(c,0,0);
-  ctx.restore();
+  // pre-lock jitter if conscious
+  if(conscious && strength<0.9){
+    ctx.globalAlpha = 0.18;
+    ctx.drawImage(canvas,(Math.random()-0.5)*2,(Math.random()-0.5)*2);
+    ctx.globalAlpha = 1;
+  }
 
-  // color bars fade-in as signal rises
-  bars.style.opacity = (strength>0.5) ? (strength-0.5)*2 : 0;
+  // bars fade-in and gentle glitch flutter near strong signal
+  bars.style.opacity = (strength>0.55)? (strength-0.55)*2 : 0;
+  glitch.style.opacity = (strength>0.9 && Math.sin(performance.now()/120)>0.6) ? .25 : 0;
 
-  // flicker glitch near lock
-  glitch.style.opacity = (strength>0.85 && Math.sin(performance.now()/120)>0.6) ? 0.25 : 0;
-
-  // degauss flash when we first get near a new station
-  if(target !== lastNear && strength>0.7){
-    degauss.style.opacity = 0.75;
-    setTimeout(()=>degauss.style.opacity=0,180);
+  // degauss flash when entering a new near window
+  if(target!==lastNear && strength>0.7){
+    degauss.style.opacity = .75; setTimeout(()=>degauss.style.opacity=0, 180);
     log(`lock?… carrier near • ${target.name}`);
-    lastNear = target;
-    holdStart = performance.now();
+    lastNear = target; holdStart = performance.now();
   }
-  sigPct.textContent = Math.round(strength*100)+'%';
 
-  // auto-redirect if held near strong signal
-  if(strength>0.86){
-    if(performance.now()-holdStart > 1500){
-      window.open(target.url,'_blank','noopener');
-      holdStart = performance.now()+999999; // prevent repeat
-      log(`Handover → ${target.name}`);
-    }
+  // hiss follows signal
+  if(noiseGain) noiseGain.gain.value = 0.25*(1-strength)+0.03;
+
+  sigEl.textContent = Math.round(strength*100) + '%';
+
+  // if held close enough long enough → prompt
+  if(strength>0.88 && performance.now()-holdStart>1200){
+    promptJump(target);
+    holdStart = performance.now()+999999; // debounce
   }
-  requestAnimationFrame(drawCRT);
+
+  requestAnimationFrame(render);
 }
-requestAnimationFrame(drawCRT);
+requestAnimationFrame(render);
 
-/* ---------- Dial interaction ---------- */
-const thumb = $('#thumb'), dialBar = $('#dial');
-function setDialFromClientX(clientX){
+/* dial interaction */
+const dialBar = $('#dial'), thumb = $('#thumb');
+function setDialFromClientX(x){
   const r = dialBar.getBoundingClientRect();
-  let x = (clientX - r.left) / r.width; x = Math.max(0,Math.min(1,x));
-  dial = x; thumb.style.left = (x*100)+'%';
+  let t = (x - r.left)/r.width; t=Math.max(0,Math.min(1,t));
+  dial = t; thumb.style.left = (t*100)+'%';
 }
-let dragging=false;
-dialBar.addEventListener('mousedown',e=>{dragging=true;setDialFromClientX(e.clientX)});
-addEventListener('mousemove',e=>{if(dragging) setDialFromClientX(e.clientX)});
-addEventListener('mouseup',()=>dragging=false);
-// touch
-dialBar.addEventListener('touchstart',e=>{setDialFromClientX(e.touches[0].clientX)},{passive:false});
-dialBar.addEventListener('touchmove',e=>{setDialFromClientX(e.touches[0].clientX)},{passive:false});
+dialBar.addEventListener('mousedown',e=>{ dragging=true; setDialFromClientX(e.clientX); initAudio(); });
+addEventListener('mousemove',e=>{ if(dragging) setDialFromClientX(e.clientX); });
+addEventListener('mouseup',()=> dragging=false);
+dialBar.addEventListener('touchstart',e=>{ setDialFromClientX(e.touches[0].clientX); initAudio(); },{passive:true});
+dialBar.addEventListener('touchmove',e=>{ setDialFromClientX(e.touches[0].clientX); },{passive:true});
 
-/* ---------- Noise / Hiss Audio ---------- */
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-let actx, noiseNode, hissGain, dialToneOsc, masterGain, muted=false;
-function audioInit(){
-  if(actx) return;
-  actx = new AudioCtx();
-  masterGain = actx.createGain(); masterGain.gain.value = 0.18; masterGain.connect(actx.destination);
-
-  // noise
-  const bufferSize = 2*actx.sampleRate;
-  const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<bufferSize;i++){ data[i] = Math.random()*2-1; }
-  noiseNode = actx.createBufferSource(); noiseNode.buffer = buffer; noiseNode.loop = true;
-  hissGain = actx.createGain(); hissGain.gain.value = 0.2;
-  noiseNode.connect(hissGain).connect(masterGain);
-  noiseNode.start();
-}
-function setNoiseForSignal(s){ if(!hissGain) return; hissGain.gain.value = 0.25*(1-s)+0.03; }
-setInterval(()=>{ setNoiseForSignal(signalAt(dial).strength); },120);
-
-$('#muteBtn').addEventListener('click', ()=>{
-  audioInit();
-  muted = !muted;
-  masterGain.gain.value = muted ? 0 : 0.18;
-  $('#muteBtn').textContent = muted ? '🔈' : '🔊';
+/* retune */
+$('#retune').addEventListener('click',()=>{
+  initAudio();
+  dial = Math.random()*0.95; thumb.style.left = (dial*100)+'%';
+  log('tuning… carrier sweep');
 });
 
-/* ---------- Artifacts ---------- */
-const artifactSets = [
+/* artifacts (rotate & real actions) */
+const sets = [
   [
     {title:'Dial Tone', note:'••••••••', kind:'tone'},
-    {title:'Color Bars', note:'SMPTE but haunted', kind:'bars'},
-    {title:'Glitch Clip', note:'vertical hold? nope', kind:'glitch'},
+    {title:'Color Bars', note:'SMPTE (haunted)', kind:'bars'},
+    {title:'Glitch Clip', note:'vertical hold?', kind:'glitch'},
     {title:'X / antenna', note:'broadcast channel', href:'https://x.com/volumeinthevoid'}
   ],
   [
     {title:'Manus Relay', note:'white page → signal', href:'https://58hpi8cw0n3q.manus.space/'},
     {title:'pump.fun', note:'chaos liquidity', href:'https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump'},
-    {title:'Dust Coil', note:'warm tubes – soft hiss', kind:'hiss'},
-    {title:'Color Bars', note:'degauss flash', kind:'bars'}
+    {title:'Dust Coil', note:'warm hiss', kind:'hiss'},
+    {title:'Color Bars', note:'degauss', kind:'bars'}
   ]
 ];
-let rota = 0;
-function renderArtifacts(){
-  const tiles = $('#tiles'); tiles.innerHTML = '';
-  artifactSets[rota%artifactSets.length].forEach(item=>{
+let rota=0;
+function drawTiles(){
+  const t = $('#tiles'); t.innerHTML='';
+  sets[rota%sets.length].forEach(item=>{
     const el = document.createElement('div'); el.className='tile';
-    el.innerHTML = `<div><strong>${item.title}</strong><br><small>${item.note}</small></div>`;
-    el.addEventListener('click', ()=>{
+    el.innerHTML = `<div><b>${item.title}</b><br><small>${item.note}</small></div>`;
+    el.addEventListener('click',()=>{
       if(item.href){ window.open(item.href,'_blank','noopener'); return; }
-      if(item.kind==='bars'){ bars.style.opacity=1; setTimeout(()=>bars.style.opacity=0,1200); degauss.style.opacity=0.7; setTimeout(()=>degauss.style.opacity=0,200); audioInit(); }
-      if(item.kind==='tone'){ audioInit(); if(!dialToneOsc){ dialToneOsc = actx.createOscillator(); dialToneOsc.type='sine'; dialToneOsc.frequency.value=425; dialToneOsc.connect(masterGain); dialToneOsc.start(); setTimeout(()=>{dialToneOsc.stop(); dialToneOsc=null;},700); } }
-      if(item.kind==='glitch'){ glitch.style.opacity=0.35; setTimeout(()=>glitch.style.opacity=0,500); }
-      if(item.kind==='hiss'){ audioInit(); masterGain.gain.value = 0.28; setTimeout(()=>{ masterGain.gain.value = muted ? 0 : 0.18; },900); }
+      initAudio();
+      if(item.kind==='bars'){ bars.style.opacity=1; setTimeout(()=>bars.style.opacity=0,1200); degauss.style.opacity=.7; setTimeout(()=>degauss.style.opacity=0,200); }
+      if(item.kind==='tone'){ const osc = actx.createOscillator(); osc.type='sine'; osc.frequency.value=425; osc.connect(outGain); osc.start(); setTimeout(()=>osc.stop(),650); }
+      if(item.kind==='glitch'){ glitch.style.opacity=.35; setTimeout(()=>glitch.style.opacity=0,500); }
+      if(item.kind==='hiss'){ outGain.gain.value = 0.28; setTimeout(()=>{ outGain.gain.value = muted?0:0.18; },900); }
     });
-    tiles.appendChild(el);
+    t.appendChild(el);
   });
   rota++;
 }
-renderArtifacts(); setInterval(renderArtifacts, 12000);
+drawTiles(); setInterval(drawTiles,12000);
 
-/* ---------- Buttons ---------- */
-$('#retuneBtn').addEventListener('click', ()=>{
-  dial = Math.random()*0.95; thumb.style.left = (dial*100)+'%';
-  log('tuning… carrier sweep');
-  audioInit();
+/* jump/preview prompt */
+const jump = $('#jump'), iframe = $('#iframe'), fallback = $('#fallback');
+const stName = $('#stName'), stUrl = $('#stUrl'), fallUrl = $('#fallUrl');
+function promptJump(st){
+  stName.textContent = st.name; stUrl.textContent = st.url;
+  // try preview
+  iframe.src = st.url;
+  fallback.hidden = true; iframe.onload = ()=>{ /* if blocked, some sites keep blank; we'll show fallback after timeout */ };
+  setTimeout(()=>{ // if still blank-ish, show fallback
+    try {
+      const blank = !iframe.contentWindow || !iframe.contentDocument || iframe.contentDocument.body.childElementCount===0;
+      if(blank){ fallback.hidden = false; fallUrl.textContent = st.url; }
+    } catch(e){ // cross-origin access throws -> show fallback
+      fallback.hidden = false; fallUrl.textContent = st.url;
+    }
+  }, 600);
+  jump.style.display='flex';
+}
+$('#stay').addEventListener('click',()=>{ jump.style.display='none'; iframe.src='about:blank'; });
+$('#visit').addEventListener('click',()=>{
+  const url = stUrl.textContent; window.open(url,'_blank','noopener');
+  jump.style.display='none'; iframe.src='about:blank';
 });
 
-addEventListener('keydown', (e)=>{
-  if(e.key==='?'){ const n = $('#opNote'); n.style.display = (n.style.display==='block'?'none':'block'); }
-  if(e.key==='b'){ conscious = !conscious; $('#consciousState').textContent = conscious?'on':'off'; log(`conscious=${conscious}`); }
-});
-
-/* ---------- Initial log ---------- */
+/* boot */
 log('— IDLE CARRIER —');
-log(`scanning: void.tv • antenna handshake`);
+log('scanning: void.tv • antenna handshake');
 log('buffering static • tracking drift');
 </script>
 </body>
