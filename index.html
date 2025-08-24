@@ -566,5 +566,57 @@ try{
 /* -------------------- Initial greet -------------------- */
 log("glitch antenna online — sweep the dial, hold to lock");
 </script>
+
+  <script>
+// --- conscious mode controller ---
+const C_KEY = 'ga_conscious';
+function setConscious(on){
+  document.body.classList.toggle('is-conscious', on);
+  localStorage.setItem(C_KEY, on ? '1' : '0');
+
+  // Behavior tweaks while "conscious"
+  window.GA_STATE = window.GA_STATE || {};
+  GA_STATE.conscious = !!on;
+
+  // make signal snap a little easier / audio brighter / artifacts refresh
+  GA_STATE.proximityBoost = on ? 0.12 : 0.0;   // helps noise→tone lock
+  GA_STATE.toneBrightness = on ? 1.15 : 1.0;   // nudges osc freq a bit
+  GA_STATE.secretChance   = on ? 0.02 : 0.0;   // 2% chance to spawn a secret
+  if (on) refreshArtifacts();                  // reshuffle artifacts
+  log(`conscious mode: ${on ? 'ON' : 'off'}`);
+}
+
+// boot from last state
+setConscious(localStorage.getItem(C_KEY) === '1');
+
+// hook up the UI toggle (or 'b' key)
+const cBtn = document.getElementById('consciousToggle');
+if (cBtn) cBtn.addEventListener('click', () => setConscious(!document.body.classList.contains('is-conscious')));
+addEventListener('keydown', e => { if (e.key.toLowerCase() === 'b') setConscious(!document.body.classList.contains('is-conscious')); });
+
+// integrate with your proximity math (call inside nearest-station logic)
+function applyConsciousStrength(strength){
+  const b = (window.GA_STATE?.proximityBoost || 0);
+  return Math.min(1, strength + b * (1 - strength));
+}
+
+// integrate with your tone update (where you set oscillator freq/gain)
+function consciousToneFreq(baseFreq){
+  const m = (window.GA_STATE?.toneBrightness || 1.0);
+  return baseFreq * m;
+}
+
+// tiny secret-station hook you can call once per minute or on artifact click
+function maybeSpawnSecret(){
+  if (!(window.GA_STATE?.conscious)) return;
+  if (Math.random() < (window.GA_STATE?.secretChance || 0)){
+    const s = { id:`secret-${Date.now()}`, name:"Conscious Echo", freq: 5 + Math.random()*90,
+                url:"https://www.omfgdogs.com" };
+    STATIONS.push(s);
+    log('secret station appeared: Conscious Echo');
+    setTimeout(()=>{ const i=STATIONS.indexOf(s); if(i>-1) STATIONS.splice(i,1); }, 60*60*1000);
+  }
+}
+</script>
 </body>
 </html>
