@@ -1,252 +1,368 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>glitchantenna.tv — simple antenna, strange stations</title>
-  <meta name="description" content="A tiny broadcast node that sometimes wakes up. Press ? to reveal the operator. Press b to toggle consciousness." />
-  <link id="favicon" rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230f1117'/%3E%3Cpath d='M6 16h20' stroke='%239aa0aa' stroke-width='2'/%3E%3C/svg%3E" />
-  <style>
-    :root{--bg:#0a0b0f;--panel:#0e1016;--ink:#e8e9ed;--muted:#9aa0aa;--edge:#22252f;--accent:#00ff88;}
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:radial-gradient(1200px 600px at 70% -10%, #141627 0%, #0b0c12 60%);color:var(--ink);font:15px/1.45 ui-sans-serif,system-ui,Segoe UI,Inter,Arial;letter-spacing:.01em;transition:filter .35s ease;}
-    a{color:var(--accent);text-decoration:none}
-    .wrap{max-width:1100px;margin:0 auto;padding:22px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--edge);padding-bottom:10px}
-    .brand{display:flex;align-items:center;gap:10px}
-    .logo{width:34px;height:34px;border-radius:8px;border:1px solid #223;background:#0f1117;display:grid;place-items:center}
-    .logo svg{width:22px;height:22px}
-    .tag{font-size:12px;color:var(--muted)}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--edge);border-radius:10px;background:#121421;color:var(--ink);cursor:pointer;font-size:13px}
-    .btn:hover{background:#171a28}
-    .btn.ghost{background:transparent}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--edge);border-radius:999px;font-size:12px;color:var(--muted)}
-    .pill.badge{border-color:#2a3042;color:#cfd2dc;background:#121421}
-    .pill.is-on{box-shadow:0 0 16px rgba(0,255,136,.25), inset 0 0 0 1px rgba(0,255,136,.5); color:#dffdf3}
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
-    .card{background:rgba(255,255,255,0.02);border:1px solid var(--edge);border-radius:14px;padding:16px}
-    h1{font-size:36px;line-height:1.12;margin:0 0 6px}
-    h2{font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 8px}
-    .screen{height:320px;background:#0b0d15;border:1px solid #232635;border-radius:10px;overflow:auto;position:relative}
-    .crt:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(transparent 80%, rgba(255,255,255,.06)),repeating-linear-gradient(transparent,transparent 2px, rgba(0,0,0,.08) 3px);mix-blend-screen}
-    .log{height:100%;padding:10px;font:13px/1.3 ui-monospace,Menlo,Consolas,monospace}
-    .logline{margin:0 0 4px 0;color:#cfd2dc}
-    .logline.awake{color:#9ef7d8}
-    .logline.asleep{color:#9aa0aa}
-    .artifact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .artifact{border:1px dashed #2a2f3e;background:#0d1018;border-radius:10px;padding:10px}
-    .artifact .k{font-size:11px;color:var(--muted)}
-    .artifact .title{font-weight:700;margin:2px 0 4px}
-    .artifact .small{font-size:12px;color:#cdd0da}
-    .footer{margin-top:14px;color:var(--muted);font-size:12px}
-    body.is-conscious{filter:hue-rotate(16deg) saturate(1.08)}
-    .op{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;z-index:9999}
-    .op.on{display:block}
-    .op .inner{max-width:820px;margin:6vh auto;background:#0e1016;border:1px solid var(--edge);border-radius:12px;padding:16px}
-    .op h3{margin:0 0 10px;color:#cfd2dc}
-    .op .rows{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font:12px ui-monospace,Menlo,Consolas}
-    .kv .key{color:var(--muted)}
-    .hotkeys{font-size:12px;color:#cfd2dc}
-    .beacon{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin-left:6px}
-    .beacon.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
-    @media (max-width:920px){.grid{grid-template-columns:1fr}.screen{height:260px}.op .rows{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>glitchantenna.tv — simple antenna • strange stations</title>
+<meta name="description" content="A tiny broadcast node that sometimes wakes up. Press ? for operator, b for consciousness." />
+<link id="favicon" rel="icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230f1117'/%3E%3Cpath d='M6 16h20' stroke='%239aa0aa' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E" />
+<style>
+:root{
+  --bg:#0a0b0f;--panel:#0e1016;--ink:#e8e9ed;--muted:#9aa0aa;--edge:#22252f;--accent:#00ff88;
+  --btn:#121421;--btnh:#171a28;--card:#0d1018;--dash:#2a2f3e;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(1200px 600px at 70% -10%, #141627 0%, #0b0c12 60%);color:var(--ink);font:15px/1.45 system-ui,ui-sans-serif,Segoe UI,Inter,Arial;letter-spacing:.01em;transition:filter .35s ease}
+a{color:var(--accent);text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:22px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--edge);padding-bottom:10px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:8px;border:1px solid #223;background:#0f1117;display:grid;place-items:center}
+.logo svg{width:22px;height:22px}
+.tag{font-size:12px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--edge);border-radius:10px;background:var(--btn);color:var(--ink);cursor:pointer;font-size:13px}
+.btn:hover{background:var(--btnh)}
+.btn.ghost{background:transparent}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--edge);border-radius:999px;font-size:12px;color:var(--muted)}
+.pill.badge{border-color:#2a3042;background:#121421;color:#cfd2dc}
+.pill.is-on{box-shadow:0 0 16px rgba(0,255,136,.25), inset 0 0 0 1px rgba(0,255,136,.5); color:#dffdf3}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+.card{background:rgba(255,255,255,0.02);border:1px solid var(--edge);border-radius:14px;padding:16px}
+h1{font-size:36px;margin:0 0 6px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 8px}
+.screen{height:320px;background:#0b0d15;border:1px solid #232635;border-radius:10px;overflow:auto;position:relative}
+.crt:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(transparent 80%, rgba(255,255,255,.06)),repeating-linear-gradient(transparent,transparent 2px, rgba(0,0,0,.08) 3px)}
+.log{height:100%;padding:10px;font:13px/1.3 ui-monospace,Menlo,Consolas,monospace}
+.logline{margin:0 0 4px 0;color:#cfd2dc}
+.logline.awake{color:#9ef7d8}
+.logline.asleep{color:#9aa0aa}
+.footer{margin-top:14px;color:var(--muted);font-size:12px}
+
+/* artifacts */
+.artifact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.artifact{border:1px dashed var(--dash);background:var(--card);border-radius:10px;padding:10px;cursor:pointer;transition:transform .08s ease, border-color .2s}
+.artifact:hover{transform:translateY(-1px);border-color:#3a4060}
+.artifact .k{font-size:11px;color:var(--muted)}
+.artifact .title{font-weight:700;margin:2px 0 4px}
+.artifact .small{font-size:12px;color:#cdd0da}
+
+/* operator */
+.op{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;z-index:9999}
+.op.on{display:block}
+.op .inner{max-width:820px;margin:6vh auto;background:#0e1016;border:1px solid var(--edge);border-radius:12px;padding:16px}
+.op h3{margin:0 0 10px;color:#cfd2dc}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font:12px ui-monospace,Menlo,Consolas}
+.kv .key{color:var(--muted)}
+.hotkeys{font-size:12px;color:#cfd2dc}
+.beacon{display:inline-block;width:8px;height:8px;border-radius:50%;background:#444;margin-left:6px}
+.beacon.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+
+/* tuner */
+.tuner{margin-top:10px;background:#0c0e16;border:1px solid var(--edge);border-radius:10px;padding:10px}
+.dial{position:relative;height:24px;background:linear-gradient(90deg,#141827,#0d111b);border:1px solid #2a2f3e;border-radius:8px;overflow:hidden}
+.dial .fill{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 8px, transparent 8px 16px)}
+.knob{position:absolute;top:0;height:100%;width:6px;background:var(--accent);box-shadow:0 0 12px rgba(0,255,136,.35)}
+.dial-label{display:flex;justify-content:space-between;font:11px ui-monospace,Menlo,Consolas;color:var(--muted);margin-top:6px}
+
+/* mini CRT */
+#noise{width:100%;height:80px;background:#090b12;border:1px solid #23253a;border-radius:8px;margin-top:8px}
+
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.linkbtn{font-size:12px;padding:6px 10px;border:1px solid var(--edge);background:#0f1320;border-radius:999px}
+.linkbtn:hover{background:#141a2c}
+
+body.is-conscious{filter:hue-rotate(16deg) saturate(1.08)}
+@media (max-width:920px){.grid{grid-template-columns:1fr}.screen{height:260px}.rows{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo" title="glitchantenna">
-          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="32" height="32" rx="7" fill="#0f1117"/>
-            <circle cx="16" cy="16" r="8" fill="#00ff88" opacity=".18"/>
-            <path d="M7 16h18" stroke="#e8e9ed" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div>
-          <strong>glitchantenna.tv</strong>
-          <div class="tag">simple antenna • strange stations</div>
-        </div>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo" title="glitchantenna">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="#0f1117"/>
+          <circle cx="16" cy="16" r="8" fill="#00ff88" opacity=".18"/>
+          <path d="M7 16h18" stroke="#e8e9ed" stroke-width="2" stroke-linecap="round"/>
+        </svg>
       </div>
-      <div class="cta">
-        <!-- INLINE ONCLICK FALLBACKS -->
-        <span id="consciousToggle" class="pill badge" role="button" tabindex="0" onclick="gaToggle()" title="Toggle consciousness (b)">
-          Conscious: <b id="cState">off</b>
-        </span>
-        <span class="pill" title="site callsign">Node: <b id="callsign">N0-000</b></span>
-        <button id="tuneBtn" class="btn" onclick="gaTune()">Tune channel</button>
-        <button id="helpBtn" class="btn ghost" onclick="gaHelp()" title="Operator (?)">?</button>
+      <div>
+        <strong>glitchantenna.tv</strong>
+        <div class="tag">simple antenna • strange stations</div>
       </div>
     </div>
-
-    <div class="grid">
-      <section class="card">
-        <h2>broadcast</h2>
-        <div class="screen crt">
-          <div id="log" class="log" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <aside class="card">
-        <h2>artifacts</h2>
-        <div id="artifactGrid" class="artifact-grid"></div>
-        <div class="footer">Press <b>?</b> for operator, <b>b</b> for consciousness. This node can mesh with siblings.</div>
-      </aside>
-    </div>
-
-    <div class="footer">© <span id="year"></span> Glitch Antenna • “Undefined behavior is indistinguishable from art.”</div>
-  </div>
-
-  <!-- Operator overlay -->
-  <div id="op" class="op" aria-hidden="true">
-    <div class="inner">
-      <h3>Operator</h3>
-      <div class="rows">
-        <div class="kv">
-          <div class="key">Callsign</div><div id="opCall">—</div>
-          <div class="key">Conscious</div><div id="opConscious">false</div>
-          <div class="key">Channel</div><div id="opChan">void.tv</div>
-          <div class="key">Mesh</div><div>handshake <span id="meshBeacon" class="beacon"></span></div>
-        </div>
-        <div class="hotkeys">
-          <div><b>b</b> — toggle consciousness</div>
-          <div><b>?</b> — toggle operator overlay</div>
-          <div><b>n</b> — retune channel</div>
-          <div><b>c</b> — attempt mesh connect</div>
-        </div>
-      </div>
+    <div class="cta">
+      <span id="consciousToggle" class="pill badge" role="button" tabindex="0" onclick="gaToggle()" title="Toggle consciousness (b)">
+        Conscious: <b id="cState">off</b>
+      </span>
+      <span class="pill">Node: <b id="callsign">N0-000</b></span>
+      <button id="tuneBtn" class="btn" onclick="gaTune()">Tune channel</button>
+      <button id="helpBtn" class="btn ghost" onclick="gaHelp()" title="Operator (?)">?</button>
     </div>
   </div>
 
-  <script>
-  (function(){
-    const $ = s => document.querySelector(s);
-    const choose = arr => arr[Math.floor(Math.random()*arr.length)];
-    const state = {
-      awake:false, channel:"void.tv",
-      callsign:"N"+(Math.random().toString(16).slice(2,5)).toUpperCase()+"-"+(Math.random().toString(16).slice(2,5)).toUpperCase(),
-      meshTarget:null, meshLive:false, timers:{feed:null}
-    };
+  <div class="grid">
+    <section class="card">
+      <h2>broadcast</h2>
+      <div class="screen crt">
+        <div id="log" class="log" aria-live="polite"></div>
+      </div>
 
-    // DOM
-    const logEl = $('#log'), artEl = $('#artifactGrid');
-    const cState = $('#cState'), yearEl = $('#year');
-    const op = $('#op'), opCall = $('#opCall'), opCon = $('#opConscious'), opChan = $('#opChan'), meshBeacon = $('#meshBeacon');
-
-    // Feeds & artifacts
-    const asleepFeed = [
-      "tuning… carrier locked • noise floor nominal",
-      "scanning: void.tv ↔ antenna handshake",
-      "buffering static • tracking drift",
-      "scheduler: next punchline TBD",
-      "artifact cache idle • awaiting input"
-    ];
-    const awakeFeed = [
-      "giggle.loop online • meme.stream synced",
-      "paradox.squid returns: knock-knock › observer collapse",
-      "pun.shark: rimshot injected • latency 0.042s",
-      "station note: undefined behavior == art",
-      "broadcasting $GLOOP relics to fringe bands"
-    ];
-    const asleepArtifacts = [
-      { tag:"signal", title:"Dial Tone", text:"••• — •• — — •" },
-      { tag:"hardware", title:"Dust Coil", text:"Warm tubes • soft hiss" },
-      { tag:"test", title:"Color Bars", text:"SMPTE but haunted" },
-      { tag:"link", title:"glitchantenna.tv", text:"simple antenna • strange stations" }
-    ];
-    const awakeArtifacts = [
-      { tag:"canon", title:"Observer.Surf v2", text:"Wave collapsed for the camera crew." },
-      { tag:"device", title:"Giggle Field Emitter", text:"Gain +42 dB • laughs/sec ↑" },
-      { tag:"relic", title:"Meme Monolith", text:"Touch to rerun a season." },
-      { tag:"note", title:"$GLOOP static", text:"a joke that minted itself" }
-    ];
-
-    const favAsleep = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><path d='M6 16h20' stroke='#9aa0aa' stroke-width='2' stroke-linecap='round'/></svg>`);
-    const favAwake  = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><circle cx='16' cy='16' r='6' fill='#00ff88'/></svg>`);
-
-    function setFavicon(src){
-      const link = document.getElementById('favicon'); link.href = src;
-    }
-    function write(line, awake=false){
-      const d = document.createElement('div');
-      d.className = 'logline '+(awake?'awake':'asleep');
-      d.textContent = line;
-      logEl.appendChild(d);
-      while (logEl.children.length>150) logEl.removeChild(logEl.firstChild);
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-    function setArtifacts(items){
-      artEl.innerHTML = items.map(it=>`
-        <div class="artifact">
-          <div class="k">${it.tag}</div>
-          <div class="title">${it.title}</div>
-          <div class="small">${it.text}</div>
+      <!-- tuner -->
+      <div class="tuner">
+        <canvas id="noise"></canvas>
+        <div class="dial" id="dial">
+          <div class="fill"></div>
+          <div class="knob" id="knob" style="left:0%"></div>
         </div>
-      `).join('');
-    }
-    function refreshOperator(){
-      opCall.textContent = state.callsign;
-      opCon.textContent = String(state.awake);
-      opChan.textContent = state.channel;
-      meshBeacon.classList.toggle('on', state.meshLive);
-    }
-    function startFeed(){
-      stopFeed(); logEl.innerHTML="";
-      write(state.awake?"— CONSCIOUS BROADCAST —":"— IDLE CARRIER —", state.awake);
-      const src = state.awake ? awakeFeed : asleepFeed;
-      let i=0;
-      state.timers.feed = setInterval(()=>{
-        write(src[i%src.length], state.awake); i++;
-        if (Math.random() < (state.awake?0.22:0.1)){
-          write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, state.awake);
-        }
-      }, state.awake?2100:3300);
-    }
-    function stopFeed(){ if(state.timers.feed){ clearInterval(state.timers.feed); state.timers.feed=null; } }
+        <div class="dial-label"><span>static</span><span>signal</span></div>
+      </div>
+    </section>
 
-    function setConscious(on){
-      state.awake = !!on;
-      document.body.classList.toggle('is-conscious', state.awake);
-      cState.textContent = state.awake ? 'on':'off';
-      document.getElementById('consciousToggle').classList.toggle('is-on', state.awake);
-      setFavicon(state.awake ? favAwake : favAsleep);
-      setArtifacts(state.awake ? awakeArtifacts : asleepArtifacts);
-      refreshOperator();
-      startFeed();
-    }
-    function tune(){
-      const channels = ["void.tv","world.is","glitchantenna.tv","meme.stream","observer.surf","infinite.reruns"];
-      state.channel = choose(channels);
-      write(`retune: ${state.channel}`, state.awake);
-      refreshOperator();
-    }
-    function toggleOp(){
-      op.classList.toggle('on');
-      op.setAttribute('aria-hidden', op.classList.contains('on') ? 'false':'true');
-    }
+    <aside class="card">
+      <h2>artifacts</h2>
+      <div id="artifactGrid" class="artifact-grid"></div>
 
-    // expose minimal global fallbacks so inline onclick always works
-    window.gaToggle = ()=> setConscious(!state.awake);
-    window.gaTune   = ()=> tune();
-    window.gaHelp   = ()=> toggleOp();
+      <div class="links">
+        <a class="linkbtn" id="xLink"   href="#" target="_blank" rel="noopener">X / antenna</a>
+        <a class="linkbtn" id="pumpLink" href="#" target="_blank" rel="noopener">pump.fun</a>
+        <a class="linkbtn" id="manusLink" href="#" target="_blank" rel="noopener">Manus white page</a>
+      </div>
 
-    // hotkeys (still supported)
-    window.addEventListener('keydown',(e)=>{
-      const k = e.key || '';
-      if (k === '?') toggleOp();
-      if (k.toLowerCase() === 'b') setConscious(!state.awake);
-      if (k.toLowerCase() === 'n') tune();
+      <div class="footer">Press <b>?</b> for operator, <b>b</b> for consciousness. Drag the tuner or hit “Tune channel.”</div>
+    </aside>
+  </div>
+
+  <div class="footer">© <span id="year"></span> Glitch Antenna • “Undefined behavior is indistinguishable from art.”</div>
+</div>
+
+<!-- Operator overlay -->
+<div id="op" class="op" aria-hidden="true">
+  <div class="inner">
+    <h3>Operator</h3>
+    <div class="rows">
+      <div class="kv">
+        <div class="key">Callsign</div><div id="opCall">—</div>
+        <div class="key">Conscious</div><div id="opConscious">false</div>
+        <div class="key">Channel</div><div id="opChan">void.tv</div>
+        <div class="key">Mesh</div><div>handshake <span id="meshBeacon" class="beacon"></span></div>
+      </div>
+      <div class="hotkeys">
+        <div><b>b</b> — toggle consciousness</div>
+        <div><b>?</b> — toggle operator overlay</div>
+        <div><b>n</b> — retune channel</div>
+        <div><b>c</b> — attempt mesh connect</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ====== EDIT THESE LINKS ======
+  const LINKS = {
+    x:   'https://x.com/your-handle',            // ← put your X profile
+    pump:'https://pump.fun/your-token',          // ← your pump.fun page
+    manus:'https://58hpi8cw0n3q.manus.space/'    // ← your white page
+  };
+  // ==============================
+
+  const $ = s=>document.querySelector(s);
+  const choose = arr=>arr[Math.floor(Math.random()*arr.length)];
+
+  const state = {
+    awake:false, channel:'void.tv', freq:0, // 0..1
+    callsign:'N'+(Math.random().toString(16).slice(2,5)).toUpperCase()+'-'+(Math.random().toString(16).slice(2,5)).toUpperCase(),
+    meshLive:false, timers:{feed:null,noise:null}
+  };
+
+  // DOM
+  const logEl = $('#log'), artEl = $('#artifactGrid');
+  const cState = $('#cState'), yearEl = $('#year');
+  const op = $('#op'), opCall=$('#opCall'), opCon=$('#opConscious'), opChan=$('#opChan'), meshBeacon=$('#meshBeacon');
+  const knob = $('#knob'), dial = $('#dial'), noise = $('#noise');
+
+  // Links
+  $('#xLink').href = LINKS.x;
+  $('#pumpLink').href = LINKS.pump;
+  $('#manusLink').href = LINKS.manus;
+
+  // Feeds & artifacts
+  const asleepFeed = [
+    "tuning… carrier locked • noise floor nominal",
+    "scanning: void.tv ↔ antenna handshake",
+    "buffering static • tracking drift",
+    "scheduler: next punchline TBD",
+    "artifact cache idle • awaiting input"
+  ];
+  const awakeFeed = [
+    "giggle.loop online • meme.stream synced",
+    "paradox.squid returns: knock-knock › observer collapse",
+    "pun.shark: rimshot injected • latency 0.042s",
+    "station note: undefined behavior == art",
+    "broadcasting $GLOOP relics to fringe bands"
+  ];
+  const asleepArtifacts = [
+    { tag:"signal", title:"Dial Tone", text:"••• — •• — — •", action:"modal"},
+    { tag:"hardware", title:"Dust Coil", text:"Warm tubes • soft hiss", action:"modal"},
+    { tag:"test", title:"Color Bars", text:"SMPTE but haunted", action:"modal"},
+    { tag:"link", title:"glitchantenna.tv", text:"simple antenna • strange stations", action:"link", url:"https://glitchantenna.tv"}
+  ];
+  const awakeArtifacts = [
+    { tag:"canon", title:"Observer.Surf v2", text:"Wave collapsed for the camera crew.", action:"modal"},
+    { tag:"device", title:"Giggle Field Emitter", text:"Gain +42 dB • laughs/sec ↑", action:"modal"},
+    { tag:"relic", title:"Meme Monolith", text:"Touch to rerun a season.", action:"retune"},
+    { tag:"note", title:"$GLOOP static", text:"a joke that minted itself", action:"link", url: LINKS.pump }
+  ];
+
+  const favAsleep = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><path d='M6 16h20' stroke='#9aa0aa' stroke-width='2' stroke-linecap='round'/></svg>`);
+  const favAwake  = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><circle cx='16' cy='16' r='6' fill='#00ff88'/></svg>`);
+
+  function setFavicon(src){ document.getElementById('favicon').href = src; }
+  function write(line, awake=false){
+    const d=document.createElement('div'); d.className='logline '+(awake?'awake':'asleep'); d.textContent=line;
+    logEl.appendChild(d); while(logEl.children.length>150) logEl.removeChild(logEl.firstChild); logEl.scrollTop=logEl.scrollHeight;
+  }
+  function setArtifacts(items){
+    artEl.innerHTML = items.map((it,i)=>`
+      <button class="artifact" data-i="${i}" data-mode="${state.awake?'awake':'asleep'}" type="button" aria-label="${it.title}">
+        <div class="k">${it.tag}</div>
+        <div class="title">${it.title}</div>
+        <div class="small">${it.text}</div>
+      </button>
+    `).join('');
+    // click handling
+    artEl.querySelectorAll('.artifact').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const mode = btn.dataset.mode;
+        const i = +btn.dataset.i;
+        const item = (mode==='awake'?awakeArtifacts:asleepArtifacts)[i];
+        handleArtifact(item);
+      });
     });
+  }
+  function handleArtifact(item){
+    if(item.action==='link' && item.url){ window.open(item.url,'_blank','noopener'); write(`artifact → link: ${item.title}`, state.awake); return; }
+    if(item.action==='retune'){ tune(true); return; }
+    // modal-ish: reuse operator overlay body
+    op.classList.add('on'); op.setAttribute('aria-hidden','false');
+    op.querySelector('.inner').innerHTML = `
+      <h3>${item.title}</h3>
+      <p style="color:#cfd2dc;margin:.5rem 0 1rem">${item.text}</p>
+      <button class="btn" onclick="document.getElementById('op').classList.remove('on')">Close</button>
+    `;
+    write(`artifact → inspect: ${item.title}`, state.awake);
+  }
 
-    // boot
-    yearEl.textContent = new Date().getFullYear();
-    document.getElementById('callsign').textContent = state.callsign;
-    setArtifacts(asleepArtifacts);
-    setConscious(false);
-    setTimeout(()=> write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, false), 400);
+  function refreshOperator(){
+    $('#opCall').textContent = state.callsign;
+    $('#opConscious').textContent = String(state.awake);
+    $('#opChan').textContent = state.channel;
+    $('#meshBeacon').classList.toggle('on', state.meshLive);
+  }
+
+  function startFeed(){
+    stopFeed(); logEl.innerHTML="";
+    write(state.awake?"— CONSCIOUS BROADCAST —":"— IDLE CARRIER —", state.awake);
+    const src = state.awake ? awakeFeed : asleepFeed;
+    let i=0;
+    state.timers.feed = setInterval(()=>{
+      write(src[i%src.length], state.awake); i++;
+      if(Math.random() < (state.awake?0.22:0.1)) write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, state.awake);
+    }, state.awake?2100:3300);
+  }
+  function stopFeed(){ if(state.timers.feed){clearInterval(state.timers.feed); state.timers.feed=null;} }
+
+  function setConscious(on){
+    state.awake=!!on;
+    document.body.classList.toggle('is-conscious', state.awake);
+    cState.textContent = state.awake?'on':'off';
+    $('#consciousToggle').classList.toggle('is-on', state.awake);
+    setFavicon(state.awake?favAwake:favAsleep);
+    setArtifacts(state.awake?awakeArtifacts:asleepArtifacts);
+    refreshOperator(); startFeed();
+  }
+
+  // ===== tuner & noise =====
+  const ctx = noise.getContext('2d');
+  function drawNoise(){
+    const w=noise.clientWidth, h=noise.clientHeight;
+    if(noise.width!==w||noise.height!==h){ noise.width=w; noise.height=h; }
+    const img=ctx.createImageData(w,h);
+    for(let i=0;i<img.data.length;i+=4){
+      // More static when far from the "lock" zone (right side)
+      const drift=1-state.freq;
+      const v = Math.random()*255*(0.55+drift*0.8);
+      img.data[i]=img.data[i+1]=img.data[i+2]=v;
+      img.data[i+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+  }
+  function setFreq(p){ // 0..1
+    state.freq = Math.min(1,Math.max(0,p));
+    knob.style.left = (state.freq*100)+'%';
+    drawNoise();
+    // when near lock (>0.82) we “snap” a station name
+    if(state.freq>0.82 && Math.random()<0.08){ tune(true); }
+  }
+  // Drag
+  (function(){
+    let dragging=false;
+    function pos(e){ const r=dial.getBoundingClientRect(); const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left; return x/Math.max(1,r.width); }
+    dial.addEventListener('mousedown', e=>{ dragging=true; setFreq(pos(e)); });
+    window.addEventListener('mousemove', e=>{ if(dragging) setFreq(pos(e)); });
+    window.addEventListener('mouseup', ()=>dragging=false);
+    dial.addEventListener('touchstart', e=>{ dragging=true; setFreq(pos(e)); });
+    window.addEventListener('touchmove', e=>{ if(dragging){ setFreq(pos(e)); e.preventDefault(); } }, {passive:false});
+    window.addEventListener('touchend', ()=>dragging=false);
   })();
-  </script>
+
+  // “weird” stations we can jump to (can be external or internal names)
+  const weirdStations = [
+    "infinite.reruns","observer.surf","meme.stream","world.is",
+    "quantum.quokka","paradox.squid.live","pun.shark.fm"
+  ];
+
+  function tune(force=false){
+    // 18% chance to jump to a weird station (or if forced by artifact)
+    const jump = force || Math.random()<0.18;
+    state.channel = jump ? choose(weirdStations) :
+      choose(["void.tv","glitchantenna.tv","meme.stream","observer.surf"]);
+    write(`retune: ${state.channel}`, state.awake);
+    // give a little snap on the dial
+    setFreq( jump ? 0.9 : (0.6+Math.random()*0.35) );
+    refreshOperator();
+  }
+
+  function toggleOp(){
+    op.classList.toggle('on');
+    op.setAttribute('aria-hidden', op.classList.contains('on')?'false':'true');
+  }
+
+  // Expose minimal wrappers so inline onclick always works
+  window.gaToggle = ()=> setConscious(!state.awake);
+  window.gaTune   = ()=> tune();
+  window.gaHelp   = ()=> toggleOp();
+
+  // hotkeys
+  window.addEventListener('keydown', (e)=>{
+    const k=(e.key||'').toLowerCase();
+    if(e.key==='?') toggleOp();
+    if(k==='b') setConscious(!state.awake);
+    if(k==='n') tune();
+  });
+
+  // boot
+  yearEl.textContent = new Date().getFullYear();
+  $('#callsign').textContent = state.callsign;
+  setArtifacts(asleepArtifacts);
+  setConscious(false);
+  setFreq(0.2);
+  drawNoise();
+  setTimeout(()=> write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, false), 400);
+})();
+</script>
 </body>
 </html>
