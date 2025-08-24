@@ -1,369 +1,570 @@
 <!doctype html>
 <html lang="en">
+<head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>glitchantenna.tv — simple antenna • strange stations</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230b0c10' stroke='%2300ff88' stroke-width='4'/%3E%3Ccircle cx='24' cy='26' r='4' fill='%2300ff88'/%3E%3Ccircle cx='40' cy='26' r='4' fill='%2300ff88'/%3E%3Cpath d='M20 36q12 14 24 0' fill='none' stroke='%2300ff88' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Glitch Antenna · tune the void</title>
+<meta name="description" content="An analog-conscious tuner for the weird web. Static resolves to signal; hold to lock and jump.">
 <style>
-:root{
-  --bg:#0a0b0f; --panel:#0f1219; --ink:#ecf0f7; --muted:#97a0b4;
-  --edge:#242a3a; --accent:#00ff88; --glow:rgba(0,255,136,.22);
-  --warn:#ff6b6b; --ok:#4ecdc4;
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:#0b0e15;color:var(--ink);font:14px/1.55 ui-monospace,Menlo,Consolas,monospace}
+  :root{
+    --bg:#0a0b0f;--ink:#e8e9ed;--muted:#8a8f9d;--edge:#20232f;--accent:#00ff88;--warn:#ff5d5d;
+    --bezel:#0d1017;--bezel-edge:#1b1e2a;--phosphor:#91ffa8;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%, #121426 0%, var(--bg) 60%);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,Segoe UI,Inter,Arial}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:28px;height:28px;border-radius:6px;border:1px solid #223;background:
+    radial-gradient(40% 40% at 50% 50%, #0f171f, #0a0e13);display:grid;place-items:center;font-weight:700;color:var(--phosphor)}
+  .tag{font-size:12px;color:var(--muted)}
+  .cta{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--edge);
+       border-radius:10px;background:#121421;color:var(--ink);cursor:pointer}
+  .btn:hover{background:#171a28}
+  .layout{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+  @media (max-width:900px){ .layout{grid-template-columns:1fr} }
 
-/* layout */
-.wrap{max-width:1100px;margin:0 auto;padding:12px}
-.header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-.brand{display:flex;gap:10px;align-items:center}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--glow)}
-.k{color:var(--muted)}
-.controls{display:flex;gap:8px;align-items:center;margin-left:auto}
-.btn{border:1px solid var(--edge);background:#121525;color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
-.btn:active{transform:translateY(1px)}
-.badge{border:1px solid var(--edge);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.02)}
-.speaker{cursor:pointer}
+  /* Tuner */
+  .tuner{background:linear-gradient(#0c0f16,#0c0f16), #0c0f16;border:1px solid var(--bezel-edge);
+         border-radius:14px;padding:12px;position:relative}
+  .crt{position:relative;border-radius:10px;border:1px solid #181b27;background:#000;overflow:hidden}
+  #noiseCanvas{width:100%;height:38vh;display:block}
+  @media (max-width:900px){ #noiseCanvas{height:42vh} }
 
-.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-@media (max-width:900px){ .grid{grid-template-columns:1fr; } }
+  /* scanline + mask */
+  .crt::after{
+    content:"";position:absolute;inset:0;
+    background:
+      linear-gradient(rgba(0,0,0,0) 48%, rgba(0,0,0,0.2) 52%) 0 0/100% 3px,
+      radial-gradient(100% 120% at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,.35) 100%);
+    mix-blend-mode:multiply;pointer-events:none;opacity:.6;
+  }
+  @media (prefers-reduced-motion:reduce){ .crt::after{opacity:.2} }
 
-.card{background:rgba(255,255,255,.02);border:1px solid var(--edge);border-radius:14px;padding:12px}
+  .dialRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
+  .dialWrap{background:#0e111a;border:1px solid var(--edge);border-radius:10px;padding:8px}
+  .readout{font-family:ui-monospace,Menlo,Consolas;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}
+  .dial{appearance:none;width:100%;height:20px;background:#0a0d15;border:1px solid var(--edge);
+        border-radius:999px;outline:none;position:relative}
+  .dial::-webkit-slider-thumb{appearance:none;width:22px;height:22px;border-radius:50%;
+        background:radial-gradient(40% 40% at 50% 50%, #0f171f,#121a24);border:2px solid var(--accent);box-shadow:0 0 8px rgba(0,255,136,.3);cursor:pointer}
+  .dial::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#121a24;border:2px solid var(--accent)}
 
-/* CRT */
-#tuner{height:280px;border:3px solid #2b2f40;border-radius:14px;position:relative;overflow:hidden;background:black;
-  box-shadow:inset 0 0 24px var(--glow),0 0 40px rgba(0,0,0,.25)}
-#crt{width:100%;height:100%;display:block}
-#scan{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:
-  repeating-linear-gradient(to bottom, rgba(122,255,183,.10) 0 2px, rgba(0,0,0,0) 2px 4px)}
-#vignette{position:absolute;inset:-20px;pointer-events:none;background:
-  radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%)}
+  .hud{position:absolute;bottom:14px;right:14px;background:#0f131d;border:1px solid var(--edge);
+       border-radius:10px;padding:10px;display:none;gap:8px;align-items:center}
+  .hud.show{display:flex}
+  .hud .btn{padding:6px 10px}
 
-#dial{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border:1px solid #2f3b3f;border-radius:10px;
-  background:linear-gradient(180deg,#171b26,#0f121a);display:flex;align-items:center}
-#thumb{width:18px;height:34px;background:var(--accent);border-radius:5px;box-shadow:0 0 14px var(--glow);
-  position:absolute;top:-3px;transform:translateX(-50%);cursor:ew-resize;touch-action:none}
-.scale{position:absolute;left:8px;right:8px;top:-14px;display:flex;justify-content:space-between;font-size:11px;color:#8fb}
-.signal{position:absolute;top:10px;right:10px;background:#142018;border:1px solid #2e5;color:#aff;padding:2px 8px;border-radius:8px;font-size:11px}
+  /* Right column */
+  .panel{background:#0f1117;border:1px solid var(--edge);border-radius:10px;padding:12px}
+  h2{margin:0 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+  .artifacts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  @media (max-width:900px){ .artifacts{grid-template-columns:1fr 1fr} }
+  .artifact{background:#0a0d15;border:1px solid var(--edge);border-radius:10px;padding:10px;cursor:pointer;transition:.15s}
+  .artifact:hover{transform:translateY(-1px);border-color:var(--accent)}
+  .artifact .name{font-weight:600}
+  .artifact .k{font-size:12px;color:var(--muted)}
+  .log{margin-top:10px;height:120px;overflow:auto;background:#0a0d15;border:1px dashed var(--edge);
+       border-radius:8px;padding:8px;font-size:12px}
+  .log .line{opacity:.9}
+  .footer{margin-top:10px;font-size:12px;color:var(--muted)}
 
-/* log */
-.log{height:300px;overflow:auto;background:#0c0f16;border:1px solid var(--edge);border-radius:12px;padding:10px}
-.log .dim{color:#8ea0b9}
+  /* Operator & prompts */
+  .operator{position:fixed;inset:auto 12px 12px auto;background:#0f1117;border:1px solid var(--edge);
+            color:var(--ink);border-radius:10px;padding:12px;max-width:min(420px,92vw);display:none;z-index:10}
+  .operator.show{display:block}
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0f1117;border:1px solid var(--edge);
+         padding:8px 12px;border-radius:999px;display:none}
+  .toast.show{display:inline-block}
 
-/* artifacts */
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tile{border:1px solid var(--edge);background:#0f1320;border-radius:12px;padding:10px;cursor:pointer}
-.tile:hover{background:#161a2a}
-.tile small{color:var(--muted)}
-.rota{font-size:11px;color:var(--muted);margin-top:8px}
-
-/* preview modal */
-#jump{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:9999}
-.box{width:min(920px,94vw);max-height:86vh;background:#0f1219;border:1px solid var(--edge);border-radius:16px;overflow:hidden;display:grid;grid-template-columns:1fr 320px}
-@media (max-width:900px){ .box{grid-template-columns:1fr} }
-.prev{background:black;min-height:340px;position:relative}
-.prev iframe{width:100%;height:100%;border:0}
-.prev .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fb;background:radial-gradient(ellipse at center,#0b0f18 0%,#070a10 70%)}
-.side{padding:14px;border-left:1px solid var(--edge)}
-.side .u{color:#9fb}
-.actions{display:flex;gap:8px;margin-top:12px}
-.xbtn{padding:10px 12px;border:1px solid var(--edge);border-radius:10px;background:#121525;color:var(--ink);cursor:pointer}
-.xbtn.primary{background:var(--accent);color:#00170c;border-color:#00c86d}
-
-/* overlays for CRT */
-#bars,#glitch,#degauss{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
-#bars{background:linear-gradient(to right,#fff 16.66%,#fff0 16.66%),
-  linear-gradient(to right,#f00 0 16.66%,#0f0 16.66% 33.32%,#00f 33.32% 49.98%,#fff 49.98% 66.64%,#f0f 66.64% 83.3%,#0ff 83.3% 100%);
-  filter:saturate(1.1) brightness(1.05);mix-blend-mode:screen}
-#glitch{background:repeating-linear-gradient(to bottom, rgba(255,0,128,.18) 0 2px, transparent 2px 4px)}
-#degauss{background:radial-gradient(circle at 50% 50%, rgba(0,255,153,.5), transparent 60%);filter:blur(12px)}
+  /* Preview bezel */
+  .preview{position:absolute;inset:10px;pointer-events:none;border-radius:8px;overflow:hidden;display:none}
+  .preview.show{display:block}
+  .preview .frame{position:absolute;right:10px;bottom:10px;width:min(260px,45%);height:min(160px,40%);border:1px solid var(--edge);border-radius:8px;overflow:hidden;background:#111}
+  .preview .cap{position:absolute;right:10px;bottom:10px;transform:translateY(calc(100% + 8px));font-size:12px;color:var(--muted);text-shadow:0 1px 0 #000}
+  .preview iframe{width:100%;height:100%}
+  .preview .fallback{display:grid;place-items:center;height:100%;color:#9aa}
 </style>
-
+</head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <div class="brand"><span class="dot"></span>
-      <div><strong>glitchantenna.tv</strong><br><span class="k">simple antenna • strange stations</span></div>
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">$</div>
+      <div>
+        <strong>Glitch Antenna</strong>
+        <div class="tag">tune the weird web • hold to lock</div>
+      </div>
     </div>
-    <div class="controls">
-      <button class="btn" id="conBtn">Conscious: off</button>
-      <span class="badge">Node: <span id="nodeId"></span></span>
-      <button class="btn" id="retune">Tune channel</button>
-      <span class="badge speaker" id="mute">🔊</span>
+    <div class="cta">
+      <a class="btn" href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">X: @volumeinthevoid</a>
+      <a class="btn" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
+      <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">manus page</a>
+      <button class="btn" id="toggleAudio">🔊 Audio</button>
+      <button class="btn" id="toggleOp">? Operator</button>
     </div>
   </div>
 
-  <div class="grid">
-    <!-- left -->
-    <div class="card">
-      <div id="tuner">
-        <canvas id="crt"></canvas>
-        <div id="scan"></div>
-        <div id="vignette"></div>
-        <div id="bars"></div>
-        <div id="glitch"></div>
-        <div id="degauss"></div>
-        <div class="signal">signal: <span id="sig">0%</span></div>
-        <div id="dial"><div class="scale"><span>static</span><span>signal</span></div><div id="thumb"></div></div>
-      </div>
-      <div id="log" class="log"></div>
-    </div>
-
-    <!-- right -->
-    <div class="card">
-      <h3 style="margin:4px 0 10px">ARTIFACTS</h3>
-      <div id="tiles" class="tiles"></div>
-      <div class="rota">Tiles rotate every ~12s. Tap “Conscious” (or press <b>b</b>) to change tuner behavior. Press <b>?</b> for note.</div>
-      <div id="note" style="display:none;margin-top:10px;border:1px dashed var(--edge);border-radius:12px;padding:10px;color:#cde">
-        <b>operator.note</b> — Conscious mode adds pre-lock jitter (it “hunts” for jokes). Holding dial near a station prompts a jump; preview tries to embed, otherwise shows a safe card.
-      </div>
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <a class="btn" href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">X / antenna</a>
-        <a class="btn" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun</a>
-        <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">Manus white page</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- jump / preview modal -->
-<div id="jump">
-  <div class="box">
-    <div class="prev"><iframe id="iframe" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"></iframe>
-      <div class="fallback" id="fallback" hidden>
-        <div>
-          <div style="opacity:.8">preview blocked by site</div>
-          <div id="fallUrl" style="margin-top:6px"></div>
+  <div class="layout">
+    <!-- Left: Tuner -->
+    <section class="tuner">
+      <div class="crt">
+        <canvas id="noiseCanvas"></canvas>
+        <div class="preview" id="preview">
+          <div class="frame">
+            <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-same-origin" referrerpolicy="no-referrer"></iframe>
+            <div class="fallback" id="previewFallback">preview unavailable — domain blocks embedding</div>
+          </div>
+          <div class="cap" id="previewCap"></div>
         </div>
       </div>
-    </div>
-    <div class="side">
-      <div class="u">station.lock()</div>
-      <div style="font-size:18px;margin:4px 0 2px"><b id="stName"></b></div>
-      <div id="stUrl" class="k"></div>
-      <div class="actions">
-        <button class="xbtn" id="stay">Stay</button>
-        <button class="xbtn primary" id="visit">Visit</button>
+
+      <div class="dialRow">
+        <div class="dialWrap">
+          <div class="readout">
+            <div>Channel: <span id="readName">—</span></div>
+            <div>Freq: <span id="readFreq">0.00</span></div>
+            <div>Signal: <span id="readStrength">0%</span></div>
+          </div>
+          <input id="dial" class="dial" type="range" min="0" max="1000" step="1" value="0" />
+        </div>
+        <button class="btn" id="tuneBtn">🎛️ Tune</button>
       </div>
-      <div style="margin-top:10px;color:var(--muted);font-size:12px">
-        Some sites deny embedding; if the preview stays blank we show a safe card instead.
+
+      <div class="hud" id="hud">
+        <div id="hudText">Lock on?</div>
+        <button class="btn" id="hudJump">Jump</button>
+        <button class="btn" id="hudCancel">Cancel</button>
       </div>
-    </div>
+    </section>
+
+    <!-- Right: Artifacts & Log -->
+    <aside class="panel">
+      <h2>artifacts</h2>
+      <div class="artifacts" id="artifacts"></div>
+      <h2 style="margin-top:10px">log</h2>
+      <div class="log" id="log"></div>
+      <div class="footer">Press <strong>?</strong> for operator notes • Press <strong>4</strong> then <strong>2</strong> for a tiny surprise • Use ← → to tune, <strong>Enter</strong> to lock, <strong>Esc</strong> to cancel</div>
+    </aside>
   </div>
 </div>
 
-<script>
-/* util */
-const $ = s => document.querySelector(s);
-const logEl = $('#log'); const sigEl = $('#sig');
-const node = (Math.random().toString(16).slice(2,6)+'-'+Math.random().toString(16).slice(2,5)).toUpperCase();
-$('#nodeId').textContent = node;
-function log(t){ const ts = new Date().toLocaleTimeString(); logEl.innerHTML = `[${node}] ${ts}  ${t}<br>` + logEl.innerHTML; }
+<!-- Operator overlay -->
+<div class="operator" id="op">
+  <div style="font-weight:700;margin-bottom:6px">Operator Node</div>
+  <div style="font-size:13px;color:var(--muted)">
+    - Static resolves to tone near stations<br>
+    - Hold steady to lock; confirm before jumping<br>
+    - Artifacts rotate: some trigger moments, some swap noise, one is a mini-game<br>
+    - Deep-link: <code>?ch=zoomquilt</code> or <code>?f=73.3</code><br>
+    - 42 mode: press 4 then 2 within 1.2s
+  </div>
+</div>
+<div class="toast" id="toast"></div>
 
-/* stations */
-const stations = [
-  { name:'void.tv', pos:0.18, url:'https://void.tv' },
-  { name:'glitchantenna', pos:0.42, url:'https://glitchantenna.tv' },
-  { name:'$GLOOP site', pos:0.63, url:'https://58hpi8cw0n3q.manus.space/' },
-  { name:'pump.fun', pos:0.82, url:'https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump' }
+<script>
+/* -------------------- Stations (weird-web picks) -------------------- */
+const STATIONS = [
+  { id:"zoomquilt",  name:"ZoomQuilt",        freq:12.5, url:"https://zoomquilt.org",    preview:"" },
+  { id:"pointer",    name:"Pointer Pointer",  freq:23.8, url:"https://pointerpointer.com", preview:"" },
+  { id:"patatap",    name:"Patatap",          freq:31.2, url:"https://patatap.com",       preview:"" },
+  { id:"endless",    name:"Endless Horse",    freq:44.2, url:"http://endless.horse",      preview:"" },
+  { id:"park",       name:"The Useless Web",  freq:56.7, url:"https://theuselessweb.com", preview:"" },
+  { id:"stars",      name:"Staggering Beauty",freq:63.3, url:"http://www.staggeringbeauty.com", preview:"" },
+  { id:"radio",      name:"Radio Garden",     freq:72.0, url:"https://radio.garden",      preview:"" },
+  { id:"museum",     name:"Museum of Errors", freq:83.9, url:"https://museumoferrors.com",preview:"" },
+  { id:"nasa",       name:"Eyes on Exoplanets",freq:91.1,url:"https://eyes.nasa.gov/apps/exo/#/",preview:"" },
+  { id:"retro",      name:"Retrowave Grid",   freq:96.4, url:"https://thatsthefinger.com",preview:"" }
 ];
 
-/* state */
-let dial = 0.07;
-let conscious = false;
-let dragging = false;
-let holdStart = 0;    // for jump prompt dwell time
-let lastNear = null;
+/* -------------------- State -------------------- */
+const dial = document.getElementById('dial');
+const readName = document.getElementById('readName');
+const readFreq = document.getElementById('readFreq');
+const readStrength = document.getElementById('readStrength');
+const hud = document.getElementById('hud');
+const hudText = document.getElementById('hudText');
+const hudJump = document.getElementById('hudJump');
+const hudCancel = document.getElementById('hudCancel');
+const tuneBtn = document.getElementById('tuneBtn');
+const noiseCanvas = document.getElementById('noiseCanvas');
+const ctx = noiseCanvas.getContext('2d');
+const preview = document.getElementById('preview');
+const previewFrame = document.getElementById('previewFrame');
+const previewFallback = document.getElementById('previewFallback');
+const previewCap = document.getElementById('previewCap');
+const toggleAudioBtn = document.getElementById('toggleAudio');
+const op = document.getElementById('op');
+const toggleOpBtn = document.getElementById('toggleOp');
+const toast = document.getElementById('toast');
+const logEl = document.getElementById('log');
 
-/* audio (needs user action) */
-const AC = window.AudioContext || window.webkitAudioContext;
-let actx, outGain, noiseSrc, noiseGain, muted=false;
-function initAudio(){
-  if(actx) return;
-  actx = new AC();
-  outGain = actx.createGain(); outGain.gain.value = 0.18; outGain.connect(actx.destination);
-  // noise
-  const len = 2*actx.sampleRate;
-  const buf = actx.createBuffer(1,len,actx.sampleRate);
-  const data = buf.getChannelData(0); for(let i=0;i<len;i++) data[i] = Math.random()*2-1;
-  noiseSrc = actx.createBufferSource(); noiseSrc.buffer = buf; noiseSrc.loop = true;
-  noiseGain = actx.createGain(); noiseGain.gain.value = 0.22;
-  noiseSrc.connect(noiseGain).connect(outGain); noiseSrc.start();
+let audioEnabled = false;
+let ac, hissNode, toneOsc, toneGain, masterGain, chirpOsc, chirpGain;
+let now = () => (ac ? ac.currentTime : 0);
+let lastHold = 0, holding = false, lockCandidate = null;
+let freq = 0; // 0..100
+let noiseProfile = "white"; // white | pink | shortwave
+let fortyTwoMode = false, seq42 = [];
+let mobileVibe = (ms)=> (navigator.vibrate && navigator.vibrate(ms));
+
+/* -------------------- Utils -------------------- */
+const lerp=(a,b,t)=>a+(b-a)*t;
+function pct(x){ return Math.max(0,Math.min(1,x)); }
+function log(line){ const div=document.createElement('div'); div.className='line'; div.textContent=line; logEl.appendChild(div); logEl.scrollTop=logEl.scrollHeight; try{ const q=JSON.parse(localStorage.getItem('ga_log')||'[]'); q.push(line); while(q.length>100) q.shift(); localStorage.setItem('ga_log',JSON.stringify(q)); }catch{} }
+function showToast(txt){ toast.textContent=txt; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500); }
+
+/* -------------------- Deep-link -------------------- */
+const url = new URL(location.href);
+const paramCh = url.searchParams.get('ch');
+const paramF  = url.searchParams.get('f');
+if(paramCh){
+  const st = STATIONS.find(s=>s.id===paramCh);
+  if(st) freq = st.freq;
 }
-$('#mute').addEventListener('click',()=>{ initAudio(); muted=!muted; outGain.gain.value = muted?0:0.18; $('#mute').textContent = muted?'🔈':'🔊'; });
-
-/* conscious toggle (button + key) */
-function setConscious(v){
-  conscious = v;
-  $('#conBtn').textContent = `Conscious: ${conscious?'on':'off'}`;
-  log(`conscious=${conscious}`);
+if(paramF){
+  freq = Math.max(0, Math.min(100, parseFloat(paramF)));
 }
-$('#conBtn').addEventListener('click',()=>setConscious(!conscious));
-addEventListener('keydown',e=>{
-  if(e.key==='b'){ setConscious(!conscious); }
-  if(e.key==='?'){ const n=$('#note'); n.style.display = n.style.display==='none'?'block':'none'; }
-});
+dial.value = Math.round(freq*10);
 
-/* CRT render */
-const canvas = $('#crt'), ctx = canvas.getContext('2d');
-const bars = $('#bars'), glitch = $('#glitch'), degauss = $('#degauss');
-function resize(){ canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
-addEventListener('resize',resize); resize();
+/* -------------------- Resize canvas -------------------- */
+function fitCanvas(){
+  const rect = noiseCanvas.getBoundingClientRect();
+  noiseCanvas.width = Math.max(1, Math.floor(rect.width * devicePixelRatio));
+  noiseCanvas.height= Math.max(1, Math.floor(rect.height* devicePixelRatio));
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+addEventListener('resize', fitCanvas);
+fitCanvas();
 
-function nearestSignal(x){
-  let best = {strength:0, target:null};
-  stations.forEach(s=>{
-    const d = Math.abs(x - s.pos);
-    const falloff = 0.06; // lock width
-    const str = Math.max(0, 1 - (d/falloff));
-    if(str > best.strength) best = {strength:str, target:s};
-  });
-  return best;
+/* -------------------- Audio -------------------- */
+function ensureAudio(){
+  if(audioEnabled) return;
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  masterGain = ac.createGain(); masterGain.gain.value = 0.7; masterGain.connect(ac.destination);
+
+  // hiss (buffer loop)
+  const len = ac.sampleRate * 2;
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    let n = (Math.random()*2-1);
+    if(noiseProfile==="pink"){ n = (n + (Math.random()*2-1)*0.7)/1.7; }
+    if(noiseProfile==="shortwave"){ n = Math.sin(i*0.003) * (Math.random()*0.6+0.4); }
+    data[i] = n * 0.4;
+  }
+  hissNode = ac.createBufferSource(); hissNode.buffer = buf; hissNode.loop = true;
+  const hissGain = ac.createGain(); hissGain.gain.value = 0.6; hissNode.connect(hissGain).connect(masterGain); hissNode.start();
+
+  // tone
+  toneOsc = ac.createOscillator(); toneOsc.type = 'sine'; toneOsc.frequency.value = 420; // nice
+  toneGain = ac.createGain(); toneGain.gain.value = 0.0; toneOsc.connect(toneGain).connect(masterGain); toneOsc.start();
+
+  // chirp (lock snap)
+  chirpOsc = ac.createOscillator(); chirpOsc.type='triangle'; chirpGain=ac.createGain(); chirpGain.gain.value=0; chirpOsc.connect(chirpGain).connect(masterGain); chirpOsc.start();
+
+  audioEnabled = true;
+  toggleAudioBtn.textContent = "🔇 Audio";
+  log("audio: armed");
+}
+function setNoiseProfile(p){
+  noiseProfile = p;
+  if(!ac) return;
+  hissNode.stop();
+  // rebuild hissNode with new profile
+  const len = ac.sampleRate * 2;
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    let n = (Math.random()*2-1);
+    if(noiseProfile==="pink"){ n = (n + (Math.random()*2-1)*0.7)/1.7; }
+    if(noiseProfile==="shortwave"){ n = Math.sin(i*0.003) * (Math.random()*0.6+0.4); }
+    data[i] = n * 0.4;
+  }
+  hissNode = ac.createBufferSource(); hissNode.buffer = buf; hissNode.loop = true;
+  const hissGain = ac.createGain(); hissGain.gain.value = 0.6; hissNode.connect(hissGain).connect(masterGain); hissNode.start();
 }
 
+/* -------------------- Proximity & preview -------------------- */
+function nearestStation(f){
+  let best=null, dmin=1e9;
+  for(const s of STATIONS){
+    const d = Math.abs(s.freq - f);
+    if(d<dmin){ dmin=d; best=s;}
+  }
+  const strength = pct(1 - (dmin/8)); // 0 at >=8 units away, 1 when right on top
+  return {station:best, strength};
+}
+
+let previewTimer=null, confirmTimer=null;
+function updatePreview(lock){ // lock: if we're very close
+  const {station, strength} = nearestStation(freq);
+  readName.textContent = station ? station.name : '—';
+  readFreq.textContent = freq.toFixed(2);
+  readStrength.textContent = Math.round(strength*100)+'%';
+
+  // audio cross-fade
+  if(audioEnabled){
+    toneOsc.frequency.value = 380 + (strength*120);
+    const tg = strength*0.7;
+    toneGain.gain.setTargetAtTime(tg, now(), 0.05);
+  }
+
+  // show preview box when strong
+  if(strength>0.85){
+    preview.classList.add('show');
+    previewCap.textContent = station.name;
+    try{
+      previewFrame.src = station.url;
+      previewFrame.style.display='block'; previewFallback.style.display='none';
+    }catch(e){
+      previewFrame.style.display='none'; previewFallback.style.display='grid';
+    }
+  }else{
+    preview.classList.remove('show');
+    previewFrame.src = 'about:blank';
+  }
+
+  // lock HUD if holding steady
+  if(strength>0.92){
+    if(!holding){ holding=true; lastHold=performance.now(); }
+    const held = performance.now()-lastHold;
+    if(held>900){ // 0.9s
+      lockCandidate = station;
+      hudText.textContent = `Lock on ${station.name}?`;
+      hud.classList.add('show');
+    }
+  }else{
+    holding=false; hud.classList.remove('show'); lockCandidate=null;
+  }
+
+  // update URL param to share (only when almost locked to avoid churn)
+  if(strength>0.95){
+    history.replaceState(null,"",`?ch=${station.id}`);
+  }
+}
+
+/* -------------------- Render noise -------------------- */
+let t=0;
 function render(){
-  const w=canvas.width, h=canvas.height;
-  const {strength, target} = nearestSignal(dial);
+  requestAnimationFrame(render);
+  t+=1;
 
-  // analog-looking noise: centered distribution + contrast curve
+  // tune freq from dial
+  const target = parseInt(dial.value,10)/10;
+  freq = lerp(freq, target, 0.18);
+
+  // generate analog noise
+  const w = noiseCanvas.clientWidth|0, h = noiseCanvas.clientHeight|0;
   const img = ctx.createImageData(w,h);
-  const baseContrast = 0.85 - 0.45*strength;   // more signal -> less contrast noise
-  const bias = 0.5 + (Math.random()-0.5)*0.02; // tiny drift to avoid uniformity
-  for(let i=0;i<img.data.length;i+=4){
-    // Box-Muller for gaussian-ish noise
-    const u=Math.random()||1e-9, v=Math.random()||1e-9;
-    let n=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-    n = (n*0.25 + bias);                    // mean around 0.5
-    n = (n - 0.5)*baseContrast + 0.5;       // contrast
-    n = Math.max(0, Math.min(1, n));
-    const g = Math.floor(n*255);
-    img.data[i]=img.data[i+1]=img.data[i+2]=g; img.data[i+3]=255;
+  const data = img.data;
+
+  const {strength} = nearestStation(freq);
+  // strength influences black/white ratio + add subtle sine bars
+  const whiteBias = lerp(0.48, 0.63, strength);
+  const barAmp = lerp(0.8, 0.25, strength); // fewer bars when locked
+  const barFreq = lerp(18, 4, strength);
+
+  for(let y=0;y<h;y++){
+    const bar = Math.sin((y+t*0.7)/barFreq)*barAmp;
+    for(let x=0;x<w;x++){
+      const i = (y*w + x)*4;
+      let n = Math.random()+bar*0.15;
+      const v = n>whiteBias ? 255 : 0;
+      // light RGB mask (phosphor)
+      const r = v;
+      const g = v;
+      const b = Math.round(v*0.96);
+      data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=255;
+    }
   }
   ctx.putImageData(img,0,0);
 
-  // tracking line
-  const lineY = (performance.now()/18) % h;
-  ctx.fillStyle = `rgba(150,255,200,${0.06 + 0.10*(1-strength)})`;
-  ctx.fillRect(0, lineY, w, 2);
-
-  // pre-lock jitter if conscious
-  if(conscious && strength<0.9){
-    ctx.globalAlpha = 0.18;
-    ctx.drawImage(canvas,(Math.random()-0.5)*2,(Math.random()-0.5)*2);
-    ctx.globalAlpha = 1;
-  }
-
-  // bars fade-in and gentle glitch flutter near strong signal
-  bars.style.opacity = (strength>0.55)? (strength-0.55)*2 : 0;
-  glitch.style.opacity = (strength>0.9 && Math.sin(performance.now()/120)>0.6) ? .25 : 0;
-
-  // degauss flash when entering a new near window
-  if(target!==lastNear && strength>0.7){
-    degauss.style.opacity = .75; setTimeout(()=>degauss.style.opacity=0, 180);
-    log(`lock?… carrier near • ${target.name}`);
-    lastNear = target; holdStart = performance.now();
-  }
-
-  // hiss follows signal
-  if(noiseGain) noiseGain.gain.value = 0.25*(1-strength)+0.03;
-
-  sigEl.textContent = Math.round(strength*100) + '%';
-
-  // if held close enough long enough → prompt
-  if(strength>0.88 && performance.now()-holdStart>1200){
-    promptJump(target);
-    holdStart = performance.now()+999999; // debounce
-  }
-
-  requestAnimationFrame(render);
+  updatePreview();
 }
-requestAnimationFrame(render);
+render();
 
-/* dial interaction */
-const dialBar = $('#dial'), thumb = $('#thumb');
-function setDialFromClientX(x){
-  const r = dialBar.getBoundingClientRect();
-  let t = (x - r.left)/r.width; t=Math.max(0,Math.min(1,t));
-  dial = t; thumb.style.left = (t*100)+'%';
-}
-dialBar.addEventListener('mousedown',e=>{ dragging=true; setDialFromClientX(e.clientX); initAudio(); });
-addEventListener('mousemove',e=>{ if(dragging) setDialFromClientX(e.clientX); });
-addEventListener('mouseup',()=> dragging=false);
-dialBar.addEventListener('touchstart',e=>{ setDialFromClientX(e.touches[0].clientX); initAudio(); },{passive:true});
-dialBar.addEventListener('touchmove',e=>{ setDialFromClientX(e.touches[0].clientX); },{passive:true});
+/* -------------------- HUD actions -------------------- */
+hudJump.onclick = () => {
+  if(!lockCandidate) return;
+  if(audioEnabled){
+    // chirp snap
+    chirpOsc.frequency.setValueAtTime(1200, now());
+    chirpGain.gain.cancelScheduledValues(now());
+    chirpGain.gain.setValueAtTime(0.25, now());
+    chirpGain.gain.exponentialRampToValueAtTime(0.0001, now()+0.12);
+  }
+  mobileVibe?.(15);
+  const u = new URL(location.href);
+  u.searchParams.set('ch', lockCandidate.id);
+  window.open(lockCandidate.url, "_blank", "noopener");
+  hud.classList.remove('show');
+  log(`jump → ${lockCandidate.name}`);
+};
+hudCancel.onclick = ()=>{ hud.classList.remove('show'); holding=false; lockCandidate=null; };
 
-/* retune */
-$('#retune').addEventListener('click',()=>{
-  initAudio();
-  dial = Math.random()*0.95; thumb.style.left = (dial*100)+'%';
-  log('tuning… carrier sweep');
-});
+/* -------------------- Controls -------------------- */
+tuneBtn.onclick = ()=>{
+  const {station,strength} = nearestStation(freq);
+  if(strength>0.7){
+    hudText.textContent = `Lock on ${station.name}?`;
+    hud.classList.add('show');
+    lockCandidate = station;
+  }else{
+    showToast("turn the dial closer to a station");
+  }
+};
+toggleAudioBtn.onclick = async ()=>{
+  if(!audioEnabled){ await ac?.resume(); ensureAudio(); }
+  else{
+    audioEnabled=false;
+    ac && ac.close().catch(()=>{});
+    toggleAudioBtn.textContent="🔊 Audio";
+    log("audio: off");
+  }
+};
+toggleOpBtn.onclick = ()=>{ op.classList.toggle('show'); };
 
-/* artifacts (rotate & real actions) */
-const sets = [
-  [
-    {title:'Dial Tone', note:'••••••••', kind:'tone'},
-    {title:'Color Bars', note:'SMPTE (haunted)', kind:'bars'},
-    {title:'Glitch Clip', note:'vertical hold?', kind:'glitch'},
-    {title:'X / antenna', note:'broadcast channel', href:'https://x.com/volumeinthevoid'}
-  ],
-  [
-    {title:'Manus Relay', note:'white page → signal', href:'https://58hpi8cw0n3q.manus.space/'},
-    {title:'pump.fun', note:'chaos liquidity', href:'https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump'},
-    {title:'Dust Coil', note:'warm hiss', kind:'hiss'},
-    {title:'Color Bars', note:'degauss', kind:'bars'}
-  ]
-];
-let rota=0;
-function drawTiles(){
-  const t = $('#tiles'); t.innerHTML='';
-  sets[rota%sets.length].forEach(item=>{
-    const el = document.createElement('div'); el.className='tile';
-    el.innerHTML = `<div><b>${item.title}</b><br><small>${item.note}</small></div>`;
-    el.addEventListener('click',()=>{
-      if(item.href){ window.open(item.href,'_blank','noopener'); return; }
-      initAudio();
-      if(item.kind==='bars'){ bars.style.opacity=1; setTimeout(()=>bars.style.opacity=0,1200); degauss.style.opacity=.7; setTimeout(()=>degauss.style.opacity=0,200); }
-      if(item.kind==='tone'){ const osc = actx.createOscillator(); osc.type='sine'; osc.frequency.value=425; osc.connect(outGain); osc.start(); setTimeout(()=>osc.stop(),650); }
-      if(item.kind==='glitch'){ glitch.style.opacity=.35; setTimeout(()=>glitch.style.opacity=0,500); }
-      if(item.kind==='hiss'){ outGain.gain.value = 0.28; setTimeout(()=>{ outGain.gain.value = muted?0:0.18; },900); }
-    });
-    t.appendChild(el);
-  });
-  rota++;
-}
-drawTiles(); setInterval(drawTiles,12000);
-
-/* jump/preview prompt */
-const jump = $('#jump'), iframe = $('#iframe'), fallback = $('#fallback');
-const stName = $('#stName'), stUrl = $('#stUrl'), fallUrl = $('#fallUrl');
-function promptJump(st){
-  stName.textContent = st.name; stUrl.textContent = st.url;
-  // try preview
-  iframe.src = st.url;
-  fallback.hidden = true; iframe.onload = ()=>{ /* if blocked, some sites keep blank; we'll show fallback after timeout */ };
-  setTimeout(()=>{ // if still blank-ish, show fallback
-    try {
-      const blank = !iframe.contentWindow || !iframe.contentDocument || iframe.contentDocument.body.childElementCount===0;
-      if(blank){ fallback.hidden = false; fallUrl.textContent = st.url; }
-    } catch(e){ // cross-origin access throws -> show fallback
-      fallback.hidden = false; fallUrl.textContent = st.url;
+/* keyboard */
+addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowLeft'){ dial.value = Math.max(0, dial.value-6); }
+  if(e.key==='ArrowRight'){ dial.value = Math.min(1000, parseInt(dial.value)+6); }
+  if(e.key==='Enter'){ tuneBtn.click(); }
+  if(e.key==='Escape'){ hudCancel.click(); }
+  if(e.key==='?'){ toggleOpBtn.click(); }
+  if(e.key==='4' || e.key==='2'){
+    seq42.push({k:e.key,t:performance.now()});
+    seq42 = seq42.filter(x=> performance.now()-x.t < 1200);
+    if(seq42.length>=2 && seq42[0].k==='4' && seq42[1].k==='2'){
+      fortyTwoMode = !fortyTwoMode;
+      document.querySelector('.crt').style.boxShadow = fortyTwoMode ? '0 0 32px rgba(0,255,136,.2) inset' : 'none';
+      showToast(fortyTwoMode ? '42 mode: Giggle Loop Gain ↑' : '42 mode: off');
+      log(`42-mode: ${fortyTwoMode?'on':'off'}`);
+      seq42=[];
     }
-  }, 600);
-  jump.style.display='flex';
-}
-$('#stay').addEventListener('click',()=>{ jump.style.display='none'; iframe.src='about:blank'; });
-$('#visit').addEventListener('click',()=>{
-  const url = stUrl.textContent; window.open(url,'_blank','noopener');
-  jump.style.display='none'; iframe.src='about:blank';
+  }
 });
 
-/* boot */
-log('— IDLE CARRIER —');
-log('scanning: void.tv • antenna handshake');
-log('buffering static • tracking drift');
+/* User gesture to start audio on first interaction */
+['click','touchstart'].forEach(ev=>addEventListener(ev,()=>ensureAudio(),{once:true}));
+
+/* -------------------- Artifacts (rotating) -------------------- */
+const ARTIFACT_POOL = [
+  {type:'moment', name:'VHS Color Bars', msg:'SMPTE bars & beep', action: momentColorBars},
+  {type:'noise',  name:'Shortwave Crackle', msg:'switch hiss → shortwave', action: ()=>{ setNoiseProfile('shortwave'); log('noise: shortwave'); } },
+  {type:'mini',   name:'Center The Dial', msg:'2s to center ±0.5', action: miniGameCenter },
+  {type:'link',   name:'Zoom Out Forever', url:'https://zoomquilt.org' },
+  {type:'noise',  name:'Pink Noise', msg:'softer hiss texture', action: ()=>{ setNoiseProfile('pink'); log('noise: pink'); } },
+  {type:'moment', name:'CRT Degauss', msg:'thoom + bloom', action: momentDegauss },
+  {type:'link',   name:'Pointer Pointer', url:'https://pointerpointer.com' }
+];
+function pickArtifacts(n=4){
+  const pool = [...ARTIFACT_POOL];
+  const picked=[];
+  while(picked.length<n && pool.length){
+    const i = Math.floor(Math.random()*pool.length);
+    picked.push(pool.splice(i,1)[0]);
+  }
+  return picked;
+}
+function renderArtifacts(){
+  const box = document.getElementById('artifacts');
+  box.innerHTML='';
+  const items = pickArtifacts(6);
+  items.forEach(item=>{
+    const div = document.createElement('div');
+    div.className='artifact';
+    div.innerHTML = `<div class="name">${item.name}</div><div class="k">${item.msg||item.url||'artifact'}</div>`;
+    div.onclick = ()=>{
+      if(item.type==='link'){ window.open(item.url,'_blank','noopener'); log(`artifact → ${item.url}`);}
+      else if(item.action){ item.action(); }
+    };
+    box.appendChild(div);
+  });
+}
+renderArtifacts();
+
+/* --------- Artifact Actions --------- */
+function momentColorBars(){
+  log('moment: SMPTE bars');
+  showToast('moment: color bars');
+  // overlay bars in the CRT for 5s with beep
+  const o = document.createElement('canvas');
+  o.style.position='absolute'; o.style.inset='0'; o.style.opacity='0.94';
+  o.width=noiseCanvas.width; o.height=noiseCanvas.height; o.style.imageRendering='pixelated';
+  noiseCanvas.parentElement.appendChild(o);
+  const ox = o.getContext('2d');
+  const cols=['#c0c0c0','#c0c000','#00c0c0','#00c000','#c000c0','#c00000','#0000c0'];
+  const w=o.clientWidth|0, h=o.clientHeight|0; const bw=(w/cols.length);
+  cols.forEach((c,i)=>{ ox.fillStyle=c; ox.fillRect(i*bw,0,bw,h*0.66); });
+  ox.fillStyle='#000'; ox.fillRect(0,h*0.66,w,h*0.34);
+  ensureAudio();
+  if(ac){
+    const bOsc = ac.createOscillator(); const g = ac.createGain();
+    bOsc.frequency.value=440; g.gain.value=0.001; bOsc.connect(g).connect(masterGain);
+    g.gain.exponentialRampToValueAtTime(0.2, now()+0.05);
+    bOsc.start(); setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(0.0001, now()+0.05); setTimeout(()=>bOsc.stop(),200); o.remove(); }, 1200);
+  }else{
+    setTimeout(()=>o.remove(),1200);
+  }
+}
+
+function momentDegauss(){
+  log('moment: CRT degauss');
+  showToast('thoom…');
+  const crt = document.querySelector('.crt');
+  crt.animate([{filter:'saturate(1) blur(0px)'},{filter:'saturate(2.2) blur(2px)'},{filter:'saturate(1) blur(0px)'}],{duration:900,easing:'ease-out'});
+  mobileVibe?.([20,30,20]);
+}
+
+function miniGameCenter(){
+  log('mini-game: center the dial (±0.5)');
+  showToast('center the dial! 2s');
+  const targetF = nearestStation(freq).station.freq;
+  const end = performance.now()+2000;
+  const tick = ()=>{
+    const ok = Math.abs(freq - targetF) <= 0.5;
+    if(performance.now()>end){
+      if(ok){
+        showToast('unlocked: hidden station for 1h');
+        log('unlock → secret');
+        // temporarily add a hidden station
+        const secret = { id:`secret${Date.now()}`, name:"Secret Rerun", freq: lerp(5,95,Math.random()), url:"https://www.omfgdogs.com" };
+        STATIONS.push(secret);
+        setTimeout(()=>{ const i=STATIONS.indexOf(secret); if(i>-1) STATIONS.splice(i,1); }, 3600_000);
+      }else{
+        showToast('missed — try again');
+      }
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* -------------------- URL share when nearly locked -------------------- */
+function setURLForStation(s){
+  const u = new URL(location.href);
+  u.searchParams.set('ch', s.id);
+  history.replaceState(null,"",u.toString());
+}
+
+/* -------------------- Tick preview name on start -------------------- */
+updatePreview();
+
+/* -------------------- Restore log from memory -------------------- */
+try{
+  const q=JSON.parse(localStorage.getItem('ga_log')||'[]');
+  if(q.length){ q.slice(-6).forEach(line=>log(line)); }
+}catch{}
+
+/* -------------------- Initial greet -------------------- */
+log("glitch antenna online — sweep the dial, hold to lock");
 </script>
 </body>
 </html>
