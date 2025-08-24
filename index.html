@@ -161,207 +161,307 @@ body.is-conscious{filter:hue-rotate(16deg) saturate(1.08)}
 
 <script>
 (function(){
-  // ====== EDIT THESE LINKS ======
-  const LINKS = {
-    x:   'https://x.com/your-handle',            // ← put your X profile
-    pump:'https://pump.fun/your-token',          // ← your pump.fun page
-    manus:'https://58hpi8cw0n3q.manus.space/'    // ← your white page
+  // ====== EDIT THESE LINKS (leave names; change URLs) ======
+  const STATIONS = {
+    "void.tv":               { url: "https://void.tv",                hue: 210 },
+    "glitchantenna.tv":      { url: "https://glitchantenna.tv",       hue: 160 },
+    "meme.stream":           { url: "https://58hpi8cw0n3q.manus.space/", hue: 120 },
+    "observer.surf":         { url: "https://magiceden.us/mint-terminal/ethereum/0xf3c978e11a1e59e12e9e412b1857ff3135f5188b", hue: 300 },
+    "infinite.reruns":       { url: "https://glitchantenna.tv",       hue: 40  },
+    "paradox.squid.live":    { url: "https://glitchantenna.tv",       hue: 260 },
+    "pun.shark.fm":          { url: "https://glitchantenna.tv",       hue: 0   },
+    "quantum.quokka":        { url: "https://glitchantenna.tv",       hue: 80  }
   };
-  // ==============================
+  const LINKS = {
+    x:   'https://x.com/your-handle',
+    pump:'https://pump.fun/your-token',
+    manus:'https://58hpi8cw0n3q.manus.space/'
+  };
+  // ==========================================================
 
   const $ = s=>document.querySelector(s);
   const choose = arr=>arr[Math.floor(Math.random()*arr.length)];
 
-  const state = {
-    awake:false, channel:'void.tv', freq:0, // 0..1
-    callsign:'N'+(Math.random().toString(16).slice(2,5)).toUpperCase()+'-'+(Math.random().toString(16).slice(2,5)).toUpperCase(),
-    meshLive:false, timers:{feed:null,noise:null}
-  };
-
-  // DOM
-  const logEl = $('#log'), artEl = $('#artifactGrid');
-  const cState = $('#cState'), yearEl = $('#year');
-  const op = $('#op'), opCall=$('#opCall'), opCon=$('#opConscious'), opChan=$('#opChan'), meshBeacon=$('#meshBeacon');
-  const knob = $('#knob'), dial = $('#dial'), noise = $('#noise');
-
-  // Links
-  $('#xLink').href = LINKS.x;
+  // Bind quick links
+  $('#xLink').href    = LINKS.x;
   $('#pumpLink').href = LINKS.pump;
-  $('#manusLink').href = LINKS.manus;
+  $('#manusLink').href= LINKS.manus;
 
-  // Feeds & artifacts
-  const asleepFeed = [
-    "tuning… carrier locked • noise floor nominal",
-    "scanning: void.tv ↔ antenna handshake",
-    "buffering static • tracking drift",
-    "scheduler: next punchline TBD",
-    "artifact cache idle • awaiting input"
-  ];
-  const awakeFeed = [
-    "giggle.loop online • meme.stream synced",
-    "paradox.squid returns: knock-knock › observer collapse",
-    "pun.shark: rimshot injected • latency 0.042s",
-    "station note: undefined behavior == art",
-    "broadcasting $GLOOP relics to fringe bands"
-  ];
-  const asleepArtifacts = [
-    { tag:"signal", title:"Dial Tone", text:"••• — •• — — •", action:"modal"},
-    { tag:"hardware", title:"Dust Coil", text:"Warm tubes • soft hiss", action:"modal"},
-    { tag:"test", title:"Color Bars", text:"SMPTE but haunted", action:"modal"},
-    { tag:"link", title:"glitchantenna.tv", text:"simple antenna • strange stations", action:"link", url:"https://glitchantenna.tv"}
-  ];
-  const awakeArtifacts = [
-    { tag:"canon", title:"Observer.Surf v2", text:"Wave collapsed for the camera crew.", action:"modal"},
-    { tag:"device", title:"Giggle Field Emitter", text:"Gain +42 dB • laughs/sec ↑", action:"modal"},
-    { tag:"relic", title:"Meme Monolith", text:"Touch to rerun a season.", action:"retune"},
-    { tag:"note", title:"$GLOOP static", text:"a joke that minted itself", action:"link", url: LINKS.pump }
-  ];
+  const logEl = $('#log'), artEl = $('#artifactGrid');
+  const knob = $('#knob'), dial = $('#dial'), noise = $('#noise');
+  const op  = $('#op'); const cState = $('#cState');
+  const yearEl = $('#year'); yearEl.textContent = new Date().getFullYear();
 
-  const favAsleep = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><path d='M6 16h20' stroke='#9aa0aa' stroke-width='2' stroke-linecap='round'/></svg>`);
-  const favAwake  = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><circle cx='16' cy='16' r='6' fill='#00ff88'/></svg>`);
+  // State
+  const state = {
+    awake:false, channel:'void.tv', freq:0.18,
+    callsign:'N'+(Math.random().toString(16).slice(2,5)).toUpperCase()+'-'+(Math.random().toString(16).slice(2,5)).toUpperCase(),
+    lockThreshold: 0.86,
+    dwellMs: 2200,
+    dwellTimer: null,
+    meshLive:false,
+    timers:{feed:null, rotate:null},
+    audio:null, hissGain:null, toneOsc:null
+  };
+  $('#callsign').textContent = state.callsign;
 
-  function setFavicon(src){ document.getElementById('favicon').href = src; }
+  // ---- Logging
   function write(line, awake=false){
-    const d=document.createElement('div'); d.className='logline '+(awake?'awake':'asleep'); d.textContent=line;
-    logEl.appendChild(d); while(logEl.children.length>150) logEl.removeChild(logEl.firstChild); logEl.scrollTop=logEl.scrollHeight;
+    const d=document.createElement('div');
+    d.className='logline '+(awake?'awake':'asleep');
+    d.textContent=line;
+    logEl.appendChild(d);
+    while(logEl.children.length>180) logEl.removeChild(logEl.firstChild);
+    logEl.scrollTop=logEl.scrollHeight;
   }
+
+  // ---- Artifacts (two shelves, one item rotates every 30s)
+  const asleepShelf = [
+    { tag:"signal",   title:"Dial Tone",        text:"••• — •• — — •", action:"tone" },
+    { tag:"hardware", title:"Dust Coil",        text:"Warm tubes • soft hiss", action:"hiss" },
+    { tag:"test",     title:"Color Bars",       text:"SMPTE but haunted", action:"bars" },
+    { tag:"link",     title:"glitchantenna.tv", text:"simple antenna • strange stations", action:"link", url:"https://glitchantenna.tv" }
+  ];
+  const awakeShelf = [
+    { tag:"canon",  title:"Observer.Surf v2", text:"Wave collapsed for the camera crew.", action:"type" },
+    { tag:"device", title:"Giggle Field Emitter", text:"Gain +42 dB • laughs/sec ↑", action:"retune" },
+    { tag:"relic",  title:"Meme Monolith",    text:"Touch to rerun a season.", action:"jump" },
+    { tag:"note",   title:"$GLOOP static",    text:"a joke that minted itself", action:"link", url: LINKS.pump }
+  ];
+
   function setArtifacts(items){
     artEl.innerHTML = items.map((it,i)=>`
-      <button class="artifact" data-i="${i}" data-mode="${state.awake?'awake':'asleep'}" type="button" aria-label="${it.title}">
+      <button class="artifact" data-i="${i}" type="button">
         <div class="k">${it.tag}</div>
         <div class="title">${it.title}</div>
         <div class="small">${it.text}</div>
-      </button>
-    `).join('');
-    // click handling
-    artEl.querySelectorAll('.artifact').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const mode = btn.dataset.mode;
-        const i = +btn.dataset.i;
-        const item = (mode==='awake'?awakeArtifacts:asleepArtifacts)[i];
-        handleArtifact(item);
-      });
+      </button>`).join('');
+    artEl.querySelectorAll('.artifact').forEach((btn,idx)=>{
+      btn.addEventListener('click', ()=>runArtifact( (state.awake?awakeShelf:asleepShelf)[idx] ));
     });
   }
-  function handleArtifact(item){
-    if(item.action==='link' && item.url){ window.open(item.url,'_blank','noopener'); write(`artifact → link: ${item.title}`, state.awake); return; }
-    if(item.action==='retune'){ tune(true); return; }
-    // modal-ish: reuse operator overlay body
-    op.classList.add('on'); op.setAttribute('aria-hidden','false');
-    op.querySelector('.inner').innerHTML = `
-      <h3>${item.title}</h3>
-      <p style="color:#cfd2dc;margin:.5rem 0 1rem">${item.text}</p>
-      <button class="btn" onclick="document.getElementById('op').classList.remove('on')">Close</button>
-    `;
-    write(`artifact → inspect: ${item.title}`, state.awake);
+  function rotateOne(){
+    const shelf = state.awake?awakeShelf:asleepShelf;
+    const pool  = [
+      { tag:"link",   title:"Manus Relay", text:"white page • signal hop", action:"link", url: LINKS.manus },
+      { tag:"device", title:"Color Bleed", text:"bloom + scanline drift", action:"bars" },
+      { tag:"canon",  title:"Pocket Laughs", text:"seeded giggle.loop", action:"type" }
+    ];
+    shelf[Math.floor(Math.random()*shelf.length)] = choose(pool);
+    setArtifacts(shelf);
   }
 
-  function refreshOperator(){
-    $('#opCall').textContent = state.callsign;
-    $('#opConscious').textContent = String(state.awake);
-    $('#opChan').textContent = state.channel;
-    $('#meshBeacon').classList.toggle('on', state.meshLive);
+  // ---- Artifact actions
+  async function runArtifact(it){
+    write(`artifact › ${it.title}`, state.awake);
+    switch(it.action){
+      case 'link': window.open(it.url,'_blank','noopener'); break;
+      case 'retune': tune(true); break;
+      case 'jump':   tune(true,true); break; // force weird station
+      case 'type':   loreType(); break;
+      case 'bars':   colorBarsFlash(); break;
+      case 'hiss':   toggleHiss(); break;
+      case 'tone':   playDialTone(); break;
+    }
   }
 
-  function startFeed(){
-    stopFeed(); logEl.innerHTML="";
-    write(state.awake?"— CONSCIOUS BROADCAST —":"— IDLE CARRIER —", state.awake);
-    const src = state.awake ? awakeFeed : asleepFeed;
-    let i=0;
-    state.timers.feed = setInterval(()=>{
-      write(src[i%src.length], state.awake); i++;
-      if(Math.random() < (state.awake?0.22:0.1)) write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, state.awake);
-    }, state.awake?2100:3300);
-  }
-  function stopFeed(){ if(state.timers.feed){clearInterval(state.timers.feed); state.timers.feed=null;} }
+  // WebAudio bus
+  function getAudio(){
+    if(state.audio) return state.audio;
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
 
+    // hiss
+    const buffer = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<data.length;i++){ data[i] = (Math.random()*2-1) * 0.5; }
+    const src = ctx.createBufferSource(); src.buffer = buffer; src.loop = true;
+    const hGain = ctx.createGain(); hGain.gain.value = 0.0; // start muted
+    src.connect(hGain).connect(master); src.start();
+
+    state.audio = { ctx, master, hiss:src }; state.hissGain = hGain;
+    return state.audio;
+  }
+
+  function toggleHiss(){
+    const bus = getAudio();
+    const on = state.hissGain.gain.value < 0.01;
+    state.hissGain.gain.cancelScheduledValues(bus.ctx.currentTime);
+    state.hissGain.gain.linearRampToValueAtTime(on?0.18:0.0, bus.ctx.currentTime + 0.5);
+    write(on?"hiss • armed":"hiss • muted", state.awake);
+  }
+  function playDialTone(){
+    const bus = getAudio();
+    if(state.toneOsc){ state.toneOsc.stop(); state.toneOsc.disconnect(); state.toneOsc=null; }
+    const o = bus.ctx.createOscillator(); o.type="sine";
+    const g = bus.ctx.createGain(); g.gain.value = 0.0;
+    o.connect(g).connect(bus.master);
+    o.frequency.setValueAtTime(350, bus.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.2, bus.ctx.currentTime + 0.05);
+    o.start();
+    // quick dual-tone wobble
+    setTimeout(()=>o.frequency.setValueAtTime(440, bus.ctx.currentTime), 180);
+    setTimeout(()=>{ g.gain.linearRampToValueAtTime(0.0, bus.ctx.currentTime + 0.2); o.stop(bus.ctx.currentTime + 0.22); }, 420);
+    state.toneOsc = o;
+  }
+
+  function colorBarsFlash(){
+    // temporarily paint SMPTE-ish bars into the noise canvas
+    const ctx = noise.getContext('2d');
+    const w=noise.clientWidth, h=noise.clientHeight;
+    if(noise.width!==w||noise.height!==h){ noise.width=w; noise.height=h; }
+    const colors = ["#c0c0c0","#c0c000","#00c0c0","#00c000","#c000c0","#c00000","#0000c0"];
+    let t=0; const id = setInterval(()=>{
+      const seg = Math.ceil((w/colors.length));
+      for(let i=0;i<colors.length;i++){
+        ctx.fillStyle = colors[(i+t)%colors.length];
+        ctx.fillRect(i*seg,0,seg,h);
+      }
+      t++;
+    },100);
+    setTimeout(()=>{ clearInterval(id); drawNoise(); }, 5000);
+    write("test bars • 5s", state.awake);
+  }
+
+  function loreType(){
+    const lines = [
+      "observer.log: surfed the wave, saved the laugh.",
+      "giggle.loop checksum ✓ • meme.artifact minted.",
+      "$GLOOP: undefined became asset; art became proof."
+    ];
+    let i=0; function step(){
+      if(i>=lines.length) return;
+      let s=""; let j=0;
+      const id = setInterval(()=>{ s += lines[i][j++]||""; if(j>=lines[i].length){ clearInterval(id); write(s,true); i++; setTimeout(step,250);} }, 12);
+    }
+    step();
+    setTimeout(()=>tune(true), 1200);
+  }
+
+  // ---- Operator & conscious
+  const favAsleep = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><path d='M6 16h20' stroke='#9aa0aa' stroke-width='2' stroke-linecap='round'/></svg>`);
+  const favAwake  = "data:image/svg+xml;utf8,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='#0f1117'/><circle cx='16' cy='16' r='6' fill='#00ff88'/></svg>`);
+  function setFavicon(src){ document.getElementById('favicon').href = src; }
   function setConscious(on){
     state.awake=!!on;
     document.body.classList.toggle('is-conscious', state.awake);
     cState.textContent = state.awake?'on':'off';
-    $('#consciousToggle').classList.toggle('is-on', state.awake);
     setFavicon(state.awake?favAwake:favAsleep);
-    setArtifacts(state.awake?awakeArtifacts:asleepArtifacts);
-    refreshOperator(); startFeed();
+    setArtifacts(state.awake?awakeShelf:asleepShelf);
+    startFeed();
+    // rotate one artifact every 30s
+    clearInterval(state.timers.rotate);
+    state.timers.rotate = setInterval(rotateOne, 30000);
   }
 
-  // ===== tuner & noise =====
+  function startFeed(){
+    clearInterval(state.timers.feed); logEl.innerHTML="";
+    write(state.awake?"— CONSCIOUS BROADCAST —":"— IDLE CARRIER —", state.awake);
+    const src = state.awake ?
+      ["giggle.loop online • meme.stream synced",
+       "paradox.squid returns: knock-knock › observer collapse",
+       "pun.shark: rimshot injected • latency 0.042s",
+       "station note: undefined behavior == art",
+       "broadcasting $GLOOP relics to fringe bands"] :
+      ["tuning… carrier locked • noise floor nominal",
+       "scanning: void.tv ↔ antenna handshake",
+       "buffering static • tracking drift",
+       "scheduler: next punchline TBD",
+       "artifact cache idle • awaiting input"];
+    let i=0;
+    state.timers.feed = setInterval(()=>{ write(src[i%src.length], state.awake); i++; }, state.awake?2100:3300);
+  }
+
+  // ---- Tuner: static resolves & dwell-to-redirect
   const ctx = noise.getContext('2d');
   function drawNoise(){
     const w=noise.clientWidth, h=noise.clientHeight;
     if(noise.width!==w||noise.height!==h){ noise.width=w; noise.height=h; }
     const img=ctx.createImageData(w,h);
-    for(let i=0;i<img.data.length;i+=4){
-      // More static when far from the "lock" zone (right side)
-      const drift=1-state.freq;
-      const v = Math.random()*255*(0.55+drift*0.8);
-      img.data[i]=img.data[i+1]=img.data[i+2]=v;
-      img.data[i+3]=255;
+    const lock = state.freq; // higher = closer to lock
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const i=(y*w+x)*4;
+        // base static
+        let v = Math.random()*255*(0.35 + (1-lock)*0.9);
+        // add faint scanlines
+        v *= 0.9 + 0.1*Math.sin((y/2 + Date.now()/40)%Math.PI);
+        // when near lock, resolve: add “signal” lines
+        if(lock>state.lockThreshold){
+          const line = (x%8===0)? 40 : 0;
+          v = Math.min(255, v + (60*lock) + line);
+        }
+        img.data[i]=img.data[i+1]=img.data[i+2]=v; img.data[i+3]=255;
+      }
     }
     ctx.putImageData(img,0,0);
+    // station label when locked
+    if(lock>state.lockThreshold){
+      ctx.fillStyle = `hsl(${(STATIONS[state.channel]?.hue||160)},100%,70%)`;
+      ctx.font = "bold 12px ui-monospace,monospace";
+      ctx.fillText(`▶ ${state.channel}`, 8, 16);
+    }
   }
-  function setFreq(p){ // 0..1
+
+  function setFreq(p){
     state.freq = Math.min(1,Math.max(0,p));
     knob.style.left = (state.freq*100)+'%';
     drawNoise();
-    // when near lock (>0.82) we “snap” a station name
-    if(state.freq>0.82 && Math.random()<0.08){ tune(true); }
+    // dwell logic
+    clearTimeout(state.dwellTimer);
+    if(state.freq>state.lockThreshold){
+      // show imminent redirect hint via log & then open
+      state.dwellTimer = setTimeout(()=> {
+        const url = (STATIONS[state.channel]||{}).url;
+        if(url){ write(`lock • redirect → ${state.channel}`, state.awake); window.location.href = url; }
+      }, state.dwellMs);
+    }
   }
-  // Drag
+
+  // drag / touch
   (function(){
-    let dragging=false;
+    let dragging=false, pressTimer=null;
     function pos(e){ const r=dial.getBoundingClientRect(); const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left; return x/Math.max(1,r.width); }
-    dial.addEventListener('mousedown', e=>{ dragging=true; setFreq(pos(e)); });
-    window.addEventListener('mousemove', e=>{ if(dragging) setFreq(pos(e)); });
-    window.addEventListener('mouseup', ()=>dragging=false);
-    dial.addEventListener('touchstart', e=>{ dragging=true; setFreq(pos(e)); });
-    window.addEventListener('touchmove', e=>{ if(dragging){ setFreq(pos(e)); e.preventDefault(); } }, {passive:false});
-    window.addEventListener('touchend', ()=>dragging=false);
+    function start(e){ dragging=true; setFreq(pos(e)); }
+    function move(e){ if(dragging){ setFreq(pos(e)); e.preventDefault(); } }
+    function end(){ dragging=false; }
+    dial.addEventListener('mousedown', start);
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', end);
+    dial.addEventListener('touchstart', e=>{ start(e); pressTimer=setTimeout(()=>{ /* long-press keeps dwell */ }, 500); }, {passive:true});
+    window.addEventListener('touchmove', move, {passive:false});
+    window.addEventListener('touchend', ()=>{ end(); clearTimeout(pressTimer); });
   })();
 
-  // “weird” stations we can jump to (can be external or internal names)
-  const weirdStations = [
-    "infinite.reruns","observer.surf","meme.stream","world.is",
-    "quantum.quokka","paradox.squid.live","pun.shark.fm"
-  ];
+  const weirdStations = Object.keys(STATIONS).filter(k=>!["void.tv","glitchantenna.tv","meme.stream","observer.surf"].includes(k));
 
-  function tune(force=false){
-    // 18% chance to jump to a weird station (or if forced by artifact)
-    const jump = force || Math.random()<0.18;
-    state.channel = jump ? choose(weirdStations) :
-      choose(["void.tv","glitchantenna.tv","meme.stream","observer.surf"]);
+  function tune(force=false, forceWeird=false){
+    const keys = Object.keys(STATIONS);
+    const pool = forceWeird ? weirdStations : ["void.tv","glitchantenna.tv","meme.stream","observer.surf"];
+    state.channel = (force||Math.random()<0.2) ? choose(pool) : choose(keys);
     write(`retune: ${state.channel}`, state.awake);
-    // give a little snap on the dial
-    setFreq( jump ? 0.9 : (0.6+Math.random()*0.35) );
-    refreshOperator();
+    const snap = 0.88 + Math.random()*0.09;
+    setFreq(snap);
   }
 
-  function toggleOp(){
-    op.classList.toggle('on');
-    op.setAttribute('aria-hidden', op.classList.contains('on')?'false':'true');
-  }
-
-  // Expose minimal wrappers so inline onclick always works
+  // Operator overlay + hotkeys
+  function toggleOp(){ op.classList.toggle('on'); op.setAttribute('aria-hidden', op.classList.contains('on')?'false':'true'); }
   window.gaToggle = ()=> setConscious(!state.awake);
-  window.gaTune   = ()=> tune();
+  window.gaTune   = ()=> tune(true);
   window.gaHelp   = ()=> toggleOp();
-
-  // hotkeys
   window.addEventListener('keydown', (e)=>{
     const k=(e.key||'').toLowerCase();
     if(e.key==='?') toggleOp();
     if(k==='b') setConscious(!state.awake);
-    if(k==='n') tune();
+    if(k==='n') tune(true);
   });
 
   // boot
-  yearEl.textContent = new Date().getFullYear();
-  $('#callsign').textContent = state.callsign;
-  setArtifacts(asleepArtifacts);
+  setArtifacts(asleepShelf);
   setConscious(false);
-  setFreq(0.2);
+  setFreq(state.freq);
   drawNoise();
-  setTimeout(()=> write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, false), 400);
+  write(`[${state.callsign}] ${state.channel} • ${new Date().toLocaleTimeString()}`, false);
 })();
 </script>
 </body>
