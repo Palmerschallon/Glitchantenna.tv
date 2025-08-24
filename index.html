@@ -1,473 +1,402 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>glitchantenna.tv — drift the dial</title>
-<meta name="description" content="An analog-feeling web tuner. Find weird stations across the net. Static becomes signal; pause to jump.">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>glitchantenna.tv — simple antenna • strange stations</title>
 <style>
 :root{
-  --bg:#0b0c10;--panel:#0f1117;--ink:#e9e9ee;--muted:#9fa4b2;--edge:#252a33;--accent:#00ff88;--warn:#ff6b6b;--crt:#1a1d28;
-  --scan:#15ff99;--dim:#0b0d13;--glass:#121623;--link:#70ffd1;
+  --bg:#0a0d12;--panel:#0d1117;--ink:#e6e8ef;--sub:#93a1b5;
+  --edge:#1b2230;--glow:#6df9c1;--vio:#a78bfa;--rose:#ff6b9f;--warn:#ff5964;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:radial-gradient(1200px 700px at 70% -10%, #14182a 0%, var(--bg) 60%);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,Inter,Segoe UI,Arial}
-a{color:var(--link);text-decoration:none}
-a:hover{text-decoration:underline}
-.wrap{max-width:1100px;margin:0 auto;padding:14px}
-.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.brand{display:flex;align-items:center;gap:10px}
-.logo{width:34px;height:34px;border-radius:6px;border:1px solid #223;background:#0f1117;display:grid;place-items:center;font:700 12px/1 ui-monospace;color:#e9e9ee}
-.title{font-weight:700}
-.badge{font:11px/1 ui-monospace;color:var(--muted)}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--edge);border-radius:8px;background:#141826;color:var(--ink);cursor:pointer}
-.btn:hover{background:#182032}
-.row{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
-@media (max-width:900px){.row{grid-template-columns:1fr}}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid var(--edge);border-radius:12px;padding:12px}
-h2{font:11px/1 ui-monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin:0 0 8px}
-.k{color:var(--muted);font-size:13px}
-
-/* TUNER */
-.tuner{display:grid;grid-template-rows:auto auto auto;gap:8px}
-.crt{background:var(--crt);border:1px solid #283042;border-radius:10px;padding:10px;position:relative;overflow:hidden}
-.crt:before{content:"";position:absolute;inset:0;background:
-  repeating-linear-gradient(0deg, rgba(255,255,255,0.035), rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px);
-  mix-blend:overlay;pointer-events:none}
-#staticCanvas{width:100%;height:260px;display:block;border-radius:6px;background:#000}
-.readout{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
-.freq{font:700 22px/1.1 ui-monospace}
-.stationName{font:12px/1.2 ui-monospace;color:var(--muted)}
-.lockDot{width:10px;height:10px;border-radius:50%;border:1px solid #355;box-shadow:0 0 8px rgba(0,255,136,.4) inset}
-.locked{background:var(--accent)}
-.sliderWrap{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
-input[type="range"]{width:100%;height:26px;background:#0e111a;border:1px solid #23283a;border-radius:20px;appearance:none;outline:none}
-input[type="range"]::-webkit-slider-thumb{appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);border:2px solid #0e111a;box-shadow:0 0 0 2px #0e111a}
-.sml{font:11px/1 ui-monospace;color:var(--muted)}
-.preview{border:1px solid #273042;border-radius:8px;overflow:hidden;height:190px;background:#0a0d15;display:none}
-.preview.show{display:block}
-.preview iframe{width:100%;height:190px;border:0;transform:scale(.999)} /* safari paint fix */
-.confirm{display:none;gap:8px;align-items:center;margin-top:6px}
-.confirm.show{display:flex}
-.confirm .btn{padding:6px 10px}
-
-/* ARTIFACTS */
-.artifacts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:700px){.artifacts{grid-template-columns:1fr}}
-.art{border:1px dashed #2b3242;border-radius:10px;padding:10px;background:#0e1119;display:grid;gap:6px}
-.art h3{margin:0;font:12px/1 ui-monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-.art .mono{font:12px/1.4 ui-monospace;background:#0b0f18;border:1px solid #1f2835;border-radius:6px;padding:8px;min-height:54px}
-.art .actions{display:flex;gap:8px;flex-wrap:wrap}
-.art .btn{font-size:12px}
-
-/* FOOTER */
-.footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-top:10px}
-.links{display:flex;gap:8px;flex-wrap:wrap}
-.tip{font:11px/1.2 ui-monospace;color:var(--muted)}
-
-/* Conscious mode */
-body.conscious{--accent:#b388ff;--link:#cda7ff}
-body.conscious .crt:before{background:
-  repeating-linear-gradient(0deg, rgba(179,136,255,0.06), rgba(179,136,255,0.06) 1px, transparent 1px, transparent 3px)}
-.thinkspark{position:absolute;border-radius:50%;pointer-events:none;mix-blend:screen}
+body{
+  margin:0;background:radial-gradient(1200px 600px at 50% -200px,#0f1420 0%,#0b0f17 60%,#070a10 100%);
+  color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;
+  letter-spacing:.2px;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+a{color:var(--glow);text-decoration:none}
+.wrap{max-width:980px;margin:18px auto;padding:0 14px}
+.top{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{width:28px;height:28px;border-radius:6px;background:#0d1b14;border:1px solid #113822;display:grid;place-items:center;box-shadow:0 0 0 1px #0f3322 inset}
+.logo svg{width:18px;height:18px}
+.tag{color:var(--sub);font-size:12px}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{border:1px solid var(--edge);background:#0c1017;border-radius:10px;padding:6px 10px;color:#c9d2e3}
+.badge.ghost{background:transparent}
+.badge.toggle{cursor:pointer}
+.badge .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:#3a4459;vertical-align:-1px}
+.badge.on .dot{background:var(--glow);box-shadow:0 0 10px var(--glow)}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.card{background:rgba(9,12,18,.7);border:1px solid var(--edge);border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.02) inset}
+.card h3{margin:0;padding:14px 14px 10px;border-bottom:1px dashed #182131;color:#b8c5de;letter-spacing:.6px}
+.card .inner{padding:14px}
+#crtFrame{border-radius:12px;background:#030507;border:1px solid #111827;box-shadow:
+   0 0 0 1px #0e1522 inset,0 10px 40px rgba(0,0,0,.5) inset,0 0 120px rgba(99,102,241,.05) inset;
+  padding:10px;margin-bottom:12px}
+#crtCanvas{width:100%;height:320px;display:block;border-radius:10px; background:black}
+.meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+#freq{font-size:26px;letter-spacing:1.5px}
+#stationName{color:#b8c5de}
+.sliderWrap{position:relative;width:100%;height:34px;background:#0a0f19;border:1px solid #1b2536;border-radius:999px;box-shadow:0 2px 16px rgba(0,0,0,.35) inset}
+#dial{appearance:none;width:100%;height:34px;background:transparent;outline:none;position:absolute;left:0;top:0}
+#dial::-webkit-slider-thumb{appearance:none;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#def, #8ae 40%, #4b79ff 60%, #2f2f49 100%);
+  border:2px solid #0a0f19;box-shadow:0 0 0 3px rgba(80,120,255,.15)}
+.ctaRow{display:flex;gap:10px;align-items:center}
+.btn{border:1px solid var(--edge);background:#0f1522;border-radius:10px;padding:8px 10px;color:#dbe2f2;cursor:pointer}
+.btn.ghost{background:transparent}
+.stat{color:#a7b3c9}
+#artifacts .pill{border:1px dashed #2a3347;background:#0b111a;border-radius:10px;padding:10px;margin:10px 0;color:#a9b6cf}
+.stack{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border:1px solid var(--edge);background:#0b1018;border-radius:10px;padding:12px}
+.tile h4{margin:0 0 4px}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.linkbtn{border:1px solid #1a2333;background:#0c111a;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe7de}
+.linkbtn:hover{background:#121a28}
+.footer{margin:22px 0;color:#8291a8}
+kbd{background:#0d1420;border:1px solid #1d2738;border-radius:6px;padding:1px 6px;color:#bcd}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
+.sheet{width:min(520px,92vw);background:#0b1018;border:1px solid #1b2435;border-radius:14px;box-shadow:0 12px 60px rgba(0,0,0,.5)}
+.sheet .head{padding:12px 14px;border-bottom:1px dashed #1b2435;display:flex;justify-content:space-between;align-items:center}
+.sheet .body{padding:14px}
+.sheet .row{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+.previewBox{height:190px;background:#020409;border:1px solid #1a2231;border-radius:8px;display:grid;place-items:center;color:#7d8aa3}
+body.is-conscious{filter:hue-rotate(14deg) saturate(1.06)}
+@media (max-width:940px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="header">
-    <div class="brand">
-      <div class="logo">$G</div>
-      <div class="title">glitchantenna.tv</div>
-      <div class="badge" id="modeBadge">idle</div>
-    </div>
-    <div class="links">
-      <a class="btn" href="https://x.com/volumeinthevoid" target="_blank" rel="noopener">X / @volumeinthevoid</a>
-      <a class="btn" href="https://pump.fun/BjuxUbkKScjGrAdSjYuUYST3zF2pt9457Ns9RZJvpump" target="_blank" rel="noopener">pump.fun / $GLOOP</a>
-      <a class="btn" href="https://58hpi8cw0n3q.manus.space/" target="_blank" rel="noopener">manus: white page</a>
-      <button class="btn" id="consciousBtn">🧠 consciousness: off</button>
-    </div>
-  </header>
-
-  <section class="row">
-    <!-- LEFT: TUNER -->
-    <div class="card tuner">
-      <h2>tuner</h2>
-      <div class="crt" id="crtBox">
-        <canvas id="staticCanvas"></canvas>
-        <div id="thinkLayer"></div>
-      </div>
-
-      <div class="readout">
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" title="glitchantenna">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6df9c1" stroke-width="2">
+            <circle cx="12" cy="12" r="8"/><path d="M7 10c1 2 3 3 5 3s4-1 5-3"/>
+          </svg>
+        </div>
         <div>
-          <div class="freq" id="freqRead">—.— MHz</div>
-          <div class="stationName" id="stationRead">drift to find a signal…</div>
+          <strong>glitchantenna.tv</strong>
+          <div class="tag">simple antenna • strange stations</div>
         </div>
-        <div class="lockDot" id="lockDot" title="lock status"></div>
       </div>
-
-      <div class="sliderWrap">
-        <input id="tunerSlider" type="range" min="0" max="1000" value="50" step="1" />
-        <button class="btn" id="tuneRandom">🎛️ tune</button>
-        <button class="btn" id="muteBtn">🔇</button>
-      </div>
-
-      <div class="preview" id="previewBox">
-        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
-      </div>
-      <div class="confirm" id="confirmBox">
-        <span class="sml">Jump to <strong id="confirmName">station</strong>?</span>
-        <button class="btn" id="confirmGo">Go</button>
-        <button class="btn" id="confirmStay">Stay</button>
+      <div class="badges">
+        <a class="badge linkbtn" href="https://x.com" target="_blank">X / antenna</a>
+        <a class="badge linkbtn" href="https://pump.fun" target="_blank">pump.fun</a>
+        <a class="badge linkbtn" href="https://manus.space" target="_blank">manus page</a>
+        <span id="audioT" class="badge toggle"><span class="dot"></span>audio</span>
+        <span id="conT" class="badge toggle"><span class="dot"></span>consciousness</span>
       </div>
     </div>
 
-    <!-- RIGHT: ARTIFACTS -->
-    <div class="card">
-      <h2>artifacts</h2>
-      <div class="artifacts">
-        <div class="art">
-          <h3>giggle.loop residue</h3>
-          <div class="mono" id="residueText">if (creativity.leaks) reroute → meme.stream</div>
-          <div class="actions">
-            <button class="btn" id="residueCycle">♻ rotate</button>
-            <button class="btn" id="residueCast">📡 cast into tuner</button>
-            <button class="btn" id="residueMint">🖼️ generate poster</button>
+    <div class="grid">
+      <!-- TUNER -->
+      <section class="card">
+        <h3>TUNER</h3>
+        <div class="inner">
+          <div id="crtFrame">
+            <canvas id="crtCanvas"></canvas>
+          </div>
+
+          <div class="meta">
+            <div id="freq">88.1 MHz</div>
+            <div id="stationName" class="stat">scanning…</div>
+            <div class="stat">• signal <span id="sig">0%</span></div>
+          </div>
+
+          <div class="sliderWrap" style="margin-top:10px">
+            <input id="dial" type="range" min="88" max="108" step="0.01" value="94.60" />
+          </div>
+
+          <div class="ctaRow" style="margin-top:10px">
+            <button id="btnTune" class="btn">tune</button>
+            <button id="btnPreview" class="btn ghost">🔎 preview (tap CRT)</button>
+            <button id="btnWarp" class="btn ghost">🛰️ random</button>
           </div>
         </div>
-        <div class="art">
-          <h3>dial anomalies</h3>
-          <div class="mono" id="anomalyText">undefined.behavior ≡ art()</div>
-          <div class="actions">
-            <button class="btn" id="anomalyNew">🎲 new anomaly</button>
-            <button class="btn" id="anomalyPing">🛰 ping station</button>
-            <button class="btn" id="anomalyOpen">🕳 random portal</button>
+      </section>
+
+      <!-- ARTIFACTS -->
+      <section id="artifacts" class="card">
+        <h3>ARTIFACTS</h3>
+        <div class="inner">
+          <div class="pill">if (<b>creativity.leaks</b>) reroute ➜ <b>meme.stream</b></div>
+
+          <div class="stack">
+            <div class="tile">
+              <h4>CRT Degauss</h4>
+              <div class="stat">thoom + bloom</div>
+              <div class="links"><button class="linkbtn" onclick="effects.degauss()">trigger</button></div>
+            </div>
+            <div class="tile">
+              <h4>Center the Dial</h4>
+              <div class="stat">2s to center ±0.5</div>
+              <div class="links"><button class="linkbtn" onclick="effects.centerDial()">run</button></div>
+            </div>
+            <div class="tile">
+              <h4>VHS Color Bars</h4>
+              <div class="stat">SMPTE bars + beep</div>
+              <div class="links"><button class="linkbtn" onclick="effects.colorBars()">cast</button></div>
+            </div>
+            <div class="tile">
+              <h4>Shortwave Crackle</h4>
+              <div class="stat">switch hiss → shortwave</div>
+              <div class="links"><button class="linkbtn" onclick="effects.shortwave()">listen</button></div>
+            </div>
           </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Tip: tap the CRT when the signal is strong to open a preview. Press <kbd>?</kbd> for operator note. <kbd>b</kbd> toggles consciousness.</div>
+  </div>
+
+  <!-- PREVIEW SHEET (tap-to-preview) -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <div class="head">
+        <div><strong id="pvTitle">Station</strong> <span class="tag" id="pvFreq"></span></div>
+        <button class="btn ghost" onclick="ui.closePreview()">✕</button>
+      </div>
+      <div class="body">
+        <div class="previewBox" id="pvBox">hold to lock…</div>
+        <div class="row">
+          <button class="btn ghost" onclick="ui.closePreview()">Cancel</button>
+          <a id="pvVisit" class="btn" target="_blank" rel="noopener">Visit</a>
         </div>
       </div>
     </div>
-  </section>
-
-  <footer class="footer">
-    <div class="tip">Tip: drag the dial; pause near a peak to see a live preview, then jump.</div>
-    <div class="links">
-      <a href="#" id="aboutLink">about</a>
-    </div>
-  </footer>
-</div>
+  </div>
 
 <script>
-/* ----------------------- STATIONS (feel free to tweak) ---------------------- */
+/* ---------------------- STATION LIST ---------------------- */
 const STATIONS = [
-  { pos: 0.08, hz: 329.63, name: "infinite horse", url: "https://endless.horse/" },
-  { pos: 0.16, hz: 349.23, name: "pointer museum", url: "https://pointerpointer.com/" },
-  { pos: 0.24, hz: 369.99, name: "useless web", url: "https://theuselessweb.com/" },
-  { pos: 0.33, hz: 392.00, name: "paper planes", url: "https://paperplanes.world/" },
-  { pos: 0.41, hz: 415.30, name: "radio garden", url: "https://radio.garden/" },
-  { pos: 0.50, hz: 440.00, name: "strange maps", url: "https://mappa.mundi/" },      // may 404 sometimes—fun
-  { pos: 0.58, hz: 466.16, name: "museum of errors", url: "https://museumoferrors.com/" }, // placeholder-ish vibes
-  { pos: 0.66, hz: 493.88, name: "zoomquilt", url: "https://zoomquilt.org/" },
-  { pos: 0.75, hz: 523.25, name: "pointer theater", url: "https://patience-is-a-virtue.org/" },
-  { pos: 0.83, hz: 554.37, name: "floating cubes", url: "https://www.koalastothemax.com/" },
-  { pos: 0.92, hz: 587.33, name: "retro tv noise", url: "https://cant-not-tweet-this.com/" }
+  { f: 88.1, name: "numbers station", url:"https://www.timeanddate.com/worldclock/", pattern:"scan" },
+  { f: 90.7, name: "paper planes",  url:"https://www.paperplanes.world/",          pattern:"lissajous" },
+  { f: 94.6, name: "ascii aquarium",url:"https://www.asciimation.co.nz/beer/",      pattern:"lines" },
+  { f: 99.3, name: "weird clock",   url:"https://plasticity.szynalski.com/",        pattern:"scan" },
+  { f:103.9, name: "star drift",    url:"https://stars.chromeexperiments.com/",     pattern:"dots" },
+  { f:107.7, name: "sound toys",    url:"https://patatap.com/",                      pattern:"bars" }
 ];
 
-/* ----------------------------- UI REFERENCES -------------------------------- */
-const slider = document.getElementById('tunerSlider');
-const freqRead = document.getElementById('freqRead');
-const stationRead = document.getElementById('stationRead');
-const lockDot = document.getElementById('lockDot');
-const previewBox = document.getElementById('previewBox');
-const previewFrame = document.getElementById('previewFrame');
-const confirmBox = document.getElementById('confirmBox');
-const confirmName = document.getElementById('confirmName');
-const confirmGo = document.getElementById('confirmGo');
-const confirmStay = document.getElementById('confirmStay');
-const tuneBtn = document.getElementById('tuneRandom');
-const muteBtn = document.getElementById('muteBtn');
-const consciousBtn = document.getElementById('consciousBtn');
-const modeBadge = document.getElementById('modeBadge');
+/* ----------------------- UI STATE ------------------------- */
+const els = {
+  canvas: document.getElementById('crtCanvas'),
+  freq: document.getElementById('freq'),
+  name: document.getElementById('stationName'),
+  sig:  document.getElementById('sig'),
+  dial: document.getElementById('dial'),
+  audioT: document.getElementById('audioT'),
+  conT: document.getElementById('conT'),
+  modal: document.getElementById('modal'),
+  pvTitle: document.getElementById('pvTitle'),
+  pvFreq: document.getElementById('pvFreq'),
+  pvVisit: document.getElementById('pvVisit'),
+  pvBox: document.getElementById('pvBox')
+};
+let ctx = els.canvas.getContext('2d');
+resize(); window.addEventListener('resize', resize);
 
-const residueText = document.getElementById('residueText');
-const residueCycle = document.getElementById('residueCycle');
-const residueCast = document.getElementById('residueCast');
-const residueMint = document.getElementById('residueMint');
+let state = {
+  freq: parseFloat(els.dial.value),
+  audioOn: false, conscious:false,
+  holdTimer:null, lastFocus:Date.now(),
+  near:null,  // nearest station object or null
+};
 
-const anomalyText = document.getElementById('anomalyText');
-const anomalyNew = document.getElementById('anomalyNew');
-const anomalyPing = document.getElementById('anomalyPing');
-const anomalyOpen = document.getElementById('anomalyOpen');
-
-/* ------------------------------ STATIC CANVAS ------------------------------- */
-const canvas = document.getElementById('staticCanvas');
-const ctx = canvas.getContext('2d', { alpha:false });
-function fitCanvas(){
-  const dpr = window.devicePixelRatio || 1;
-  const r = canvas.getBoundingClientRect();
-  canvas.width = Math.floor(r.width * dpr);
-  canvas.height = Math.floor(r.height * dpr);
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+/* ------------------- AUDIO (tone + hiss) ------------------ */
+let ac, tone, noise, noiseGain, toneGain;
+function ensureAudio(){
+  if (ac) return;
+  ac = new (window.AudioContext||window.webkitAudioContext)();
+  tone = ac.createOscillator(); tone.type='sine';
+  toneGain = ac.createGain(); toneGain.gain.value=0;
+  tone.connect(toneGain).connect(ac.destination); tone.start();
+  // white noise
+  const buffer = ac.createBuffer(1, ac.sampleRate*2, ac.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
+  noise = ac.createBufferSource(); noise.buffer=buffer; noise.loop=true;
+  noiseGain = ac.createGain(); noiseGain.gain.value=.12;
+  noise.connect(noiseGain).connect(ac.destination); noise.start();
 }
-window.addEventListener('resize', fitCanvas);
-fitCanvas();
+function setAudio(on){
+  state.audioOn = on;
+  els.audioT.classList.toggle('on', on);
+  if (!ac && on) ensureAudio();
+  if (ac){
+    noiseGain.gain.setTargetAtTime(on?.2:0, ac.currentTime,.05);
+    toneGain.gain.setTargetAtTime(on?.08:0, ac.currentTime,.02);
+  }
+}
 
-/* Render analog static; brightness depends on distance to nearest station */
-let tFrame = 0;
-function drawStatic(){
-  const w = canvas.width / (window.devicePixelRatio||1);
-  const h = canvas.height / (window.devicePixelRatio||1);
-  const imgData = ctx.createImageData(w, h);
-  const data = imgData.data;
+/* ---------------------- CONSCIOUSNESS --------------------- */
+function setConscious(on){
+  state.conscious=on;
+  document.body.classList.toggle('is-conscious', on);
+  els.conT.classList.toggle('on', on);
+}
+els.audioT.onclick = ()=> setAudio(!state.audioOn);
+els.conT.onclick   = ()=> setConscious(!state.conscious);
 
-  const x = slider01();
-  const near = 1 - Math.min(1, nearestStation(x).d / LOCK_RADIUS); // 0 far → 1 near
-  const noiseAmt = 1 - near; // more noise when far
+/* ---------------------- DRAWING STATIC -------------------- */
+let t = 0;
+function resize(){
+  const r = els.canvas.getBoundingClientRect();
+  els.canvas.width = Math.floor(r.width  * devicePixelRatio);
+  els.canvas.height= Math.floor(r.height * devicePixelRatio);
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+function rand(){ return Math.random(); }
 
-  // flicker and slight banding for analog feel
-  const band = Math.floor((Math.sin(tFrame*0.06)+1)*20);
-  for (let y=0; y<h; y++){
-    for (let x=0; x<w; x++){
-      const i = (y*w + x)*4;
-      // base white noise
-      let n = (Math.random()*255)|0;
-      // add horizontal/vertical hum lines
-      const hum = ((y% (40+band))===0 || (x% (53+((tFrame>>2)%7)))===0) ? 30 : 0;
-      // brightness shaped by noiseAmt
-      const mix = noiseAmt*0.85 + 0.15;
-      const v = Math.max(0, Math.min(255, n*mix + hum*(1-noiseAmt)));
-      data[i]=data[i+1]=data[i+2]=v; data[i+3]=255;
+function drawCRT(){
+  const w = els.canvas.width/devicePixelRatio,
+        h = els.canvas.height/devicePixelRatio;
+  // base static
+  const img = ctx.createImageData(w,h);
+  const data = img.data; let s = signalStrength();
+  for (let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const i = (y*w+x)*4;
+      // analog-ish noise with vertical bias
+      const n = (Math.random()*180 + Math.random()*80*(1-s) + (Math.sin((x+t*0.8)*0.03)+1)*20);
+      data[i]=data[i+1]=data[i+2]=n;
+      data[i+3]=255;
     }
   }
-  ctx.putImageData(imgData,0,0);
-  tFrame++;
-  requestAnimationFrame(drawStatic);
-}
-requestAnimationFrame(drawStatic);
+  ctx.putImageData(img,0,0);
 
-/* --------------------------- RADIO AUDIO ENGINE ----------------------------- */
-const AC = new (window.AudioContext||window.webkitAudioContext)();
-const master = AC.createGain(); master.gain.value = 0.6; master.connect(AC.destination);
+  // scanlines
+  ctx.fillStyle='rgba(0,0,0,.26)';
+  for(let y=0;y<h;y+=2) ctx.fillRect(0,y,w,1);
 
-// tone
-const toneGain = AC.createGain(); toneGain.gain.value = 0; toneGain.connect(master);
-const osc = AC.createOscillator(); osc.type = 'sine'; osc.frequency.value = 440; osc.connect(toneGain); osc.start();
-
-// fringe warble
-const lfo = AC.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 4.2;
-const lfoDepth = AC.createGain(); lfoDepth.gain.value = 0; lfo.connect(lfoDepth); lfoDepth.connect(toneGain.gain); lfo.start();
-
-// noise
-function makeNoiseBuffer(){
-  const seconds=2, rate=AC.sampleRate, len=seconds*rate;
-  const buf = AC.createBuffer(1,len,rate), ch=buf.getChannelData(0);
-  for(let i=0;i<len;i++) ch[i]=Math.random()*2-1;
-  return buf;
-}
-const noiseSrc = AC.createBufferSource(); noiseSrc.buffer = makeNoiseBuffer(); noiseSrc.loop = true;
-const noiseLPF = AC.createBiquadFilter(); noiseLPF.type = 'lowpass'; noiseLPF.frequency.value = 1400;
-const noiseGain = AC.createGain(); noiseGain.gain.value = 0.6;
-noiseSrc.connect(noiseLPF); noiseLPF.connect(noiseGain); noiseGain.connect(master); noiseSrc.start();
-
-function smooth(param, value, t=0.08){ param.setTargetAtTime(value, AC.currentTime, t); }
-
-/* ------------------------------- TUNER LOGIC -------------------------------- */
-const LOCK_RADIUS = 0.030;       // 3% of dial
-const FULL_QUIETING = 0.012;     // inside: very clean tone
-const HYSTERESIS_MS = 900;
-const DETUNE_EDGE = 12;
-
-let locked = null, lastLock = 0, muted=false;
-function slider01(){
-  const v = parseFloat(slider.value);
-  return v/(parseFloat(slider.max)||1000);
-}
-function nearestStation(x){
-  let best={i:-1,d:2};
-  for(let i=0;i<STATIONS.length;i++){
-    const d=Math.abs(x-STATIONS[i].pos);
-    if(d<best.d) best={i,d};
-  }
-  return best;
-}
-function formatFreq(x){ return (88 + x*20).toFixed(1); } // FM-ish readout
-
-let holdTimer = null;           // time parked near signal → preview/confirm
-const PREVIEW_DELAY = 400;      // ms
-const CONFIRM_DELAY = 1200;     // ms
-
-function tick(){
-  const x = slider01();
-  const {i,d} = nearestStation(x);
-  const near = Math.min(1, Math.max(0, 1 - (d/LOCK_RADIUS)));
-  const toneAmt = (d<=LOCK_RADIUS)? near : 0;
-  const edge = Math.max(0, (d - FULL_QUIETING) / (LOCK_RADIUS - FULL_QUIETING));
-
-  // audio
-  const baseHz = STATIONS[i].hz;
-  const detune = edge*DETUNE_EDGE*Math.sin(AC.currentTime*7.3);
-  smooth(osc.frequency, baseHz+detune, 0.06);
-  smooth(toneGain.gain, toneAmt, 0.06);
-  smooth(noiseGain.gain, 0.45 + 0.55*(1-toneAmt), 0.08);
-  smooth(noiseLPF.frequency, 1200 - 800*near, 0.1);
-  smooth(lfoDepth.gain, 0.12*edge, 0.12);
-
-  // lock state
-  const now = performance.now();
-  if (d<=LOCK_RADIUS) {
-    if (locked===null || locked!==i){ locked=i; lastLock=now; }
-  } else if (locked!==null && now-lastLock>HYSTERESIS_MS){ locked=null; }
-
-  // UI readouts
-  freqRead.textContent = `${formatFreq(x)} MHz`;
-  stationRead.textContent = (d<=LOCK_RADIUS) ? `${STATIONS[i].name}` : 'drift to find a signal…';
-  lockDot.classList.toggle('locked', d<=LOCK_RADIUS);
-
-  // preview + confirm flow
-  clearTimeout(holdTimer);
-  if (d<=LOCK_RADIUS){
-    holdTimer = setTimeout(()=>{
-      // show preview
-      previewFrame.src = STATIONS[i].url;
-      previewBox.classList.add('show');
-      confirmName.textContent = STATIONS[i].name;
-      confirmBox.classList.add('show');
-    }, PREVIEW_DELAY);
-  } else {
-    previewBox.classList.remove('show');
-    confirmBox.classList.remove('show');
+  // if near station, overlay a pattern “resolving”
+  if (state.near){
+    ctx.globalCompositeOperation='screen';
+    ctx.strokeStyle='rgba(158,126,255,.8)'; ctx.lineWidth=1.2;
+    switch(state.near.pattern){
+      case 'lines':
+        for(let i=0;i<10;i++){
+          const yy = (h/2)+Math.sin((t*0.08)+i)*h*.18;
+          ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(w,yy); ctx.stroke();
+        } break;
+      case 'dots':
+        ctx.fillStyle='rgba(135,86,255,.8)';
+        for(let i=0;i<200;i++){
+          ctx.fillRect((i*37+t*3)%w, (i*71+t*1.5)%h, 2, 2);
+        } break;
+      case 'bars':
+        for(let i=0;i<7;i++){
+          ctx.fillStyle=`hsla(${(i*40+t)%360},90%,55%,.35)`;
+          ctx.fillRect(i*w/7,0,w/7,h);
+        } break;
+      case 'lissajous':
+        ctx.strokeStyle='rgba(255,200,255,.8)';
+        ctx.beginPath();
+        for(let i=0;i<500;i++){
+          const a= i/500*Math.PI*2;
+          const x = w/2 + Math.sin(3*a+t*.03)*w*.35;
+          const y = h/2 + Math.sin(2*a+t*.05)*h*.25;
+          i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+        } ctx.stroke(); break;
+      default: // scan
+        ctx.fillStyle='rgba(200,230,255,.25)';
+        ctx.fillRect((t*8)%w,0,2,h);
+    }
+    ctx.globalCompositeOperation='source-over';
   }
 
-  requestAnimationFrame(tick);
+  // slight vignette/curvature
+  const grad = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)/1.1);
+  grad.addColorStop(.7,'rgba(0,0,0,0)');
+  grad.addColorStop(1,'rgba(0,0,0,.45)');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
 }
-requestAnimationFrame(tick);
 
-// interactions
-function resumeAC(){ if (AC.state!=='running') AC.resume(); }
-['input','pointerdown','touchstart','mousedown'].forEach(ev=> slider.addEventListener(ev, resumeAC,{passive:true}));
-
-tuneBtn.addEventListener('click', ()=>{
-  resumeAC();
-  const pick = STATIONS[Math.floor(Math.random()*STATIONS.length)];
-  slider.value = Math.round(pick.pos*(parseFloat(slider.max)||1000));
-});
-muteBtn.addEventListener('click', ()=>{
-  muted=!muted; muteBtn.textContent = muted?'🔈':'🔇';
-  smooth(master.gain, muted?0:0.6, 0.05);
-});
-confirmGo.addEventListener('click', ()=>{
-  const x=slider01(); const {i}=nearestStation(x);
-  window.open(STATIONS[i].url, '_blank', 'noopener');
-});
-confirmStay.addEventListener('click', ()=>{
-  previewBox.classList.remove('show'); confirmBox.classList.remove('show');
-});
-
-/* --------------------------- CONSCIOUSNESS MODE ----------------------------- */
-const thinkLayer = document.getElementById('thinkLayer');
-function spawnThought(){
-  if (!document.body.classList.contains('conscious')) return;
-  const s = document.createElement('div');
-  s.className='thinkspark';
-  const r = Math.random();
-  const size = 6 + Math.random()*16;
-  s.style.width = s.style.height = size+'px';
-  s.style.left = (10 + Math.random()*80)+'%';
-  s.style.top = (10 + Math.random()*80)+'%';
-  s.style.background = `radial-gradient(circle, rgba(179,136,255,0.6), rgba(179,136,255,0))`;
-  s.style.filter = 'blur(1px)';
-  s.style.opacity = .0;
-  s.style.transition = 'opacity .5s ease, transform 1.4s ease';
-  thinkLayer.appendChild(s);
-  requestAnimationFrame(()=>{ s.style.opacity=.9; s.style.transform='translateY(-6px) scale(1.2)'; });
-  setTimeout(()=>{ s.style.opacity=0; s.style.transform='translateY(-12px) scale(1.4)'; }, 900);
-  setTimeout(()=> s.remove(), 1800);
-}
-let thoughtTimer = null;
-
-consciousBtn.addEventListener('click', ()=>{
-  document.body.classList.toggle('conscious');
-  const on = document.body.classList.contains('conscious');
-  consciousBtn.textContent = on ? '🧠 consciousness: on' : '🧠 consciousness: off';
-  modeBadge.textContent = on ? 'conscious' : 'idle';
-  if (on){
-    if (!thoughtTimer) thoughtTimer = setInterval(spawnThought, 700);
-  } else {
-    clearInterval(thoughtTimer); thoughtTimer=null;
-    thinkLayer.innerHTML='';
+/* ----------------------- TUNER LOGIC ---------------------- */
+function nearestStation(){
+  let best=null, dmin=9e9;
+  for(const s of STATIONS){
+    const d = Math.abs(state.freq - s.f);
+    if (d<dmin){dmin=d; best=s;}
   }
-});
-
-/* ------------------------------ ARTIFACTS UX -------------------------------- */
-const residueOptions = [
-  'if (creativity.leaks) reroute → meme.stream',
-  'while(human){ humor += paradox }',
-  'undefined.behavior === art()',
-  'try{ meaning++ }catch(e){ laugh() }',
-  'const g = mint("giggle"); g.loop();'
-];
-let rIndex=0;
-residueCycle.addEventListener('click', ()=>{
-  rIndex = (rIndex+1)%residueOptions.length;
-  residueText.textContent = residueOptions[rIndex];
-});
-// Cast: nudge slider toward a random station + do a little thinking burst
-residueCast.addEventListener('click', ()=>{
-  const pick = STATIONS[Math.floor(Math.random()*STATIONS.length)];
-  slider.value = Math.round(pick.pos*(parseFloat(slider.max)||1000));
-  for (let i=0;i<6;i++) setTimeout(spawnThought, i*110);
-});
-// Poster: open a data URL with a quick poster image
-residueMint.addEventListener('click', ()=>{
-  const w=900,h=1200, cnv=document.createElement('canvas'); cnv.width=w; cnv.height=h; const c=cnv.getContext('2d');
-  c.fillStyle='#0f1117'; c.fillRect(0,0,w,h);
-  const grad=c.createLinearGradient(0,0,w,0); grad.addColorStop(0,'#00ff88'); grad.addColorStop(1,'#b388ff');
-  c.fillStyle=grad; c.globalAlpha=0.12; for(let y=0;y<h;y+=6){ c.fillRect(0,y,w,2);}
-  c.globalAlpha=1; c.fillStyle='#e9e9ee'; c.font='bold 64px ui-monospace'; c.fillText('GIGGLE LOOP POSTER', 40, 140);
-  c.font='24px ui-monospace'; c.fillStyle='#9fa4b2'; c.fillText(residueText.textContent, 40, 200, w-80);
-  c.font='18px ui-monospace'; c.fillText('glitchantenna.tv', 40, h-40);
-  const url = cnv.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='gloop-poster.png'; a.click();
-});
-
-const anomalies = [
-  'carrier drift on 432.haha Hz',
-  'phase ghosts in the dial',
-  'FM hiss turns to whisper',
-  'AM warble in the walls',
-  'echoes from future ads',
-  'subharmonics of a joke'
-];
-anomalyNew.addEventListener('click', ()=>{
-  anomalyText.textContent = anomalies[Math.floor(Math.random()*anomalies.length)];
-});
-anomalyPing.addEventListener('click', ()=>{
-  // briefly brighten static and beep
-  flashStatic(); blip();
-});
-anomalyOpen.addEventListener('click', ()=>{
-  const pick = STATIONS[Math.floor(Math.random()*STATIONS.length)];
-  window.open(pick.url, '_blank','noopener');
-});
-
-function flashStatic(){
-  const crt=document.getElementById('crtBox');
-  crt.style.boxShadow='0 0 0 2px rgba(0,255,136,.3), inset 0 0 30px rgba(0,255,136,.2)';
-  setTimeout(()=> crt.style.boxShadow='none', 250);
+  return {station:best, dist:dmin};
 }
-function blip(){
-  const g=AC.createGain(); g.connect(master); g.gain.value=0;
-  const o=AC.createOscillator(); o.type='triangle'; o.frequency.value=880; o.connect(g);
-  o.start(); smooth(g.gain, 0.5, 0.005); setTimeout(()=> smooth(g.gain,0,0.03), 80); setTimeout(()=> o.stop(), 200);
+function signalStrength(){
+  const {dist} = nearestStation();
+  const s = Math.max(0, 1 - dist/0.6); // wider capture range
+  return Math.min(1, s);
+}
+function updateMeta(){
+  const {station, dist} = nearestStation();
+  const sig = Math.round(signalStrength()*100);
+  state.near = (sig>55)? station : null;
+  els.sig.textContent = sig+"%";
+  els.freq.textContent = state.freq.toFixed(1)+" MHz";
+  els.name.textContent = state.near? station.name : "scanning…";
+  // tone sweeps toward a pitch when near
+  if (ac){
+    const base = 180 + (state.freq-88)*14;
+    const lock = state.near ? 420 : base;
+    tone.frequency.setTargetAtTime(lock, ac.currentTime,.08);
+  }
 }
 
-/* ------------------------------- ABOUT LINK --------------------------------- */
-document.getElementById('aboutLink').addEventListener('click', (e)=>{
-  e.preventDefault();
-  alert(`glitchantenna.tv\n\nDrag the dial. Static becomes signal.\nHold near a peak to preview and jump.\nPress 🧠 to toggle conscious mode.`);
+/* -------------------- TAP-TO-PREVIEW ONLY ----------------- */
+const ui = {
+  openPreview(st){
+    els.pvTitle.textContent = st.name;
+    els.pvFreq.textContent  = `${st.f.toFixed(1)} MHz`;
+    els.pvVisit.href        = st.url;
+    els.pvBox.textContent   = "preview locked — tap Visit to jump";
+    els.modal.style.display = 'flex';
+  },
+  closePreview(){ els.modal.style.display='none'; }
+};
+els.canvas.addEventListener('click',()=>{ if(state.near) ui.openPreview(state.near); });
+
+/* buttons */
+document.getElementById('btnTune').onclick = ()=> { /* nothing magic; kept for feel */ };
+document.getElementById('btnPreview').onclick = ()=> { if(state.near) ui.openPreview(state.near); };
+document.getElementById('btnWarp').onclick = ()=>{
+  const pick = STATIONS[Math.floor(Math.random()*STATIONS.length)];
+  els.dial.value = pick.f; state.freq = pick.f; updateMeta();
+};
+
+els.dial.oninput = e=>{ state.freq = parseFloat(e.target.value); updateMeta(); };
+
+/* keyboard helpers */
+addEventListener('keydown',e=>{
+  if (e.key==='?') alert('operator note: “Undefined behavior is indistinguishable from art.”');
+  if (e.key==='b'){ setConscious(!state.conscious); }
 });
 
-/* ----------------------------- INIT AUDIO TOUCH ----------------------------- */
-document.addEventListener('click', resumeAC, {once:true});
-document.addEventListener('touchstart', resumeAC, {once:true, passive:true});
+/* ---------------------- ARTIFACT ACTIONS ------------------ */
+const effects = {
+  degauss(){
+    // bright flash + wobble
+    const w=els.canvas.width/devicePixelRatio,h=els.canvas.height/devicePixelRatio;
+    ctx.save(); ctx.globalCompositeOperation='screen';
+    const g=ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)/2);
+    g.addColorStop(0,'rgba(255,255,255,.8)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h); ctx.restore();
+    if (ac){ tone.frequency.setTargetAtTime(80,ac.currentTime,.01); setTimeout(()=>tone.frequency.setTargetAtTime(420,ac.currentTime,.15),120);}
+  },
+  centerDial(){ const target = Math.round(state.freq)+.5; els.dial.value=target; state.freq=target; updateMeta(); },
+  colorBars(){ const s=STATIONS.find(x=>x.pattern==='bars'); state.freq=s.f; els.dial.value=s.f; updateMeta(); },
+  shortwave(){ setAudio(true); if (ac) tone.type='triangle'; setTimeout(()=>tone.type='sine', 2400); }
+};
+
+/* ------------------------ MAIN LOOP ----------------------- */
+function tick(){ t++; drawCRT(); requestAnimationFrame(tick); }
+updateMeta(); setAudio(false); setConscious(false); tick();
+
+/* visibility: cancel any pending preview timers (defensive) */
+document.addEventListener('visibilitychange',()=>{
+  // no timers anymore; kept in case we add hold-to-preview later
+  state.lastFocus = Date.now();
+});
 </script>
 </body>
 </html>
